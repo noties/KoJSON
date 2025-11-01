@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.Test
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 
 plugins {
@@ -29,4 +31,10 @@ dependencies {
     api(libs.gson)
 
     testImplementation(libs.kotlin.test)
+}
+
+tasks.withType<Test>().configureEach {
+    testLogging {
+        events(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED)
+    }
 }
