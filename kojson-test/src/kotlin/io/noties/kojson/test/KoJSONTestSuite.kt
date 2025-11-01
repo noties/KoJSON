@@ -1,0 +1,875 @@
+package io.noties.kojson.test
+
+import io.noties.kojson.api.Json
+import io.noties.kojson.api.JsonElement
+import io.noties.kojson.api.JsonImplementation
+import io.noties.kojson.api.JsonNull
+import io.noties.kojson.api.JsonObject
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+
+@Suppress("TestFunctionName")
+abstract class KoJSONTestSuite<T : Any> {
+
+    //---------------------------------------------------
+    //#region _
+    //---------------------------------------------------
+
+    //    // but... does it give any guarantee that nested class tests would be run afterwards?
+//    // @BeforeClass is not supported in Kotlin/Common 🤯
+//    @BeforeTest
+//    fun before() {
+//        println("HELLO FROM BEFORE SUITE:" + System.nanoTime())
+//    }
+
+    protected abstract fun createFactory(): JsonNativeFactory<T>
+    protected abstract fun createImplementation(): JsonImplementation<T>
+
+    @Suppress("MemberVisibilityCanBePrivate")
+    protected val factory: JsonNativeFactory<T> get() = createFactory()
+
+    // as JsonImplementation should be stateless, we create it each time it is accessed,
+    //  as it must not have any inner state
+    @Suppress("MemberVisibilityCanBePrivate")
+    protected val implementation: JsonImplementation<T> get() = createImplementation()
+
+    // would it be executed? the answer might not be very pleasing
+//    public inner class NativeTypeTest: io.noties.jsonk.test.suite.NativeTypeTest<T>(this)
+//
+//    public inner class JsonNullTest: io.noties.jsonk.test.suite.JsonNullTest<T>(this)
+//
+//    public inner class JsonTest: io.noties.jsonk.test.suite.JsonTest()
+
+    /**
+     * Kotlin was meant to be a reliable companion and an effective tool
+     * to help you deliver software efficiently. Instead, it often feels
+     * like an adversary—an environment where you spend more time
+     * wrestling with its quirks than solving real problems. Its surprising and
+     * sometimes baffling shortcomings make development unnecessarily complex.
+     *
+     * Even the error messages, which one would expect to be refined given
+     * the expertise of the tooling company behind Kotlin, often add to the frustration
+     * rather than alleviating it.
+     *
+     * Kotlin has become a language that demands not just proficiency
+     * but genuine affection. If you don’t _love_ it, you’re in trouble—because
+     * only strong emotional commitment can carry you through its maze
+     * of inconsistencies and design oddities.
+     *
+     * It’s not a particularly well-balanced language. Many of its features,
+     * while interesting in isolation, interact poorly in practice.
+     * As a result, developers spend disproportionate amounts of time fighting
+     * the language instead of focusing on building meaningful functionality.
+     *
+     * Eventually, you realize you’ve wasted hours resolving an issue
+     * that exists solely due to Kotlin’s own limitations—only to find
+     * that the “solution” has grown more complicated than the actual business
+     * logic you were trying to implement.
+     *
+     * One can’t help but wonder: how did this become acceptable?
+     * How are so many developers comfortable with this experience—and
+     * what keeps them loyal to it?
+     */
+
+    // Inner class is no good, as as far as I understand, there is no guarantee that
+    //  its tests are going to be run after parent class is initialized (and moreover
+    //  there is no BEFORE-CLASS in koltin.test in Kotlin/Common, so only `@BeforeTest` is available
+    //  which is run before each test IN PARENT class, no nested. Amazingly bad testing support.
+//    class MyInnerTest {
+//        @kotlin.test.BeforeTest
+//        public fun before() {
+//            println("HELLO FROM BEFORE INNER:" + System.nanoTime())
+//        }
+//
+//        @Test
+//        fun test() {
+//            assertTrue("so true") { false }
+//        }
+//    }
+
+    @Suppress("MemberVisibilityCanBePrivate")
+    protected fun new(block: JsonImplementation<T>.() -> JsonElement): JsonElement {
+        return block(implementation)
+    }
+
+    @Suppress("MemberVisibilityCanBePrivate")
+    protected val SampleJson.json: Json get() = Json(new { of(factory.parse(rawJson)) })
+
+    //---------------------------------------------------
+    //#endregion _
+    //---------------------------------------------------
+
+
+    //----------------------------------------------------------------------------------------------
+    //#region [JsonNull]
+    //----------------------------------------------------------------------------------------------
+
+    @Test
+    fun JsonNull_all_values_null() {
+
+        val sample = object : SampleJson {
+            val keys =
+                listOf("boolean", "int", "long", "float", "double", "string", "object", "array")
+
+            override val rawJson: String
+                get() = """
+                {
+${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
+                }
+            """.trimIndent()
+        }
+
+        val json = sample.json
+
+        for (key in sample.keys) {
+            assertNull(json[key].boolean, key)
+            assertNull(json[key].int, key)
+            assertNull(json[key].long, key)
+            assertNull(json[key].float, key)
+            assertNull(json[key].double, key)
+            assertNull(json[key].string, key)
+            assertNull(json[key].array, key)
+            assertNull(json[key].jsonArray, key)
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    //#endregion --[JsonNull]
+    //----------------------------------------------------------------------------------------------
+
+    //---------------------------------------------------
+    //#region [Json]
+    //---------------------------------------------------
+
+    @Test
+    fun Json_defaults() {
+        val json = Json()
+
+        assertEquals(false, json.booleanValue)
+        assertEquals(0, json.intValue)
+        assertEquals(0L, json.longValue)
+        assertEquals(0F, json.floatValue)
+        assertEquals(0.0, json.doubleValue)
+        assertEquals("", json.stringValue)
+        assertEquals(emptyList(), json.arrayValue)
+        assertEquals(emptyList(), json.jsonArrayValue)
+    }
+
+    @Test
+    fun Json_exists() {
+        val sample = object : SampleJson {
+            val keyNull = "null"
+
+            override val rawJson: String
+                get() = """
+                    {
+                      "$keyNull": null
+                    }
+                """.trimIndent()
+        }
+
+        val json = sample.json
+
+        // `null` in JSON exists
+        assertEquals(true, json[sample.keyNull].exists())
+        assertEquals(false, json[sample.keyNull].existsNotNull())
+
+        assertEquals(false, json["some_weird"].exists(), "${json["some_weird"].element}")
+        assertEquals(false, json["some_weird"].existsNotNull())
+    }
+
+//    @Test
+//    fun Json_comments() {
+//        // json engine must allow comments, isn't it too big stretch to assume that?
+//        // yes, seems so
+//    }
+
+    //---------------------------------------------------
+    //#endregion [Json]
+    //---------------------------------------------------
+
+    //---------------------------------------------------
+    //#region [Native]
+    //---------------------------------------------------
+
+    @Test
+    fun Native_JsonPrimitive_isJsonPrimitive() {
+        val data = listOf(
+            "false" to factory.primitive(false),
+            "0" to factory.primitive(0),
+            "1" to factory.primitive(1L),
+            "2F" to factory.primitive(2F),
+            "3_0" to factory.primitive(3.0),
+            "(empty-string)" to factory.primitive(""),
+            "\"hello json\"" to factory.primitive("hello json"),
+        )
+
+        for ((name, raw) in data) {
+            val element = new { of(raw) }
+            assertTrue(element.isJsonPrimitive, name)
+            assertFalse(element.isJsonObject, name)
+            assertFalse(element.isJsonArray, name)
+        }
+    }
+
+    @Test
+    fun Native_JsonObject_isJsonObject() {
+        val element = new { of(factory.`object`()) }
+        assertFalse(element.isJsonPrimitive, "isJsonPrimitive=false")
+        assertTrue(element.isJsonObject, "isJsonObject=true")
+        assertFalse(element.isJsonArray, "isJsonArray=false")
+    }
+
+    @Test
+    fun Native_JsonObject_add() {
+
+        fun run(block: (JsonObject) -> Unit) {
+            val element = new { of(factory.`object`()) }
+            block(element as JsonObject)
+        }
+
+        data class Input(
+            val key: String,
+            val element: JsonElement?
+        )
+
+        // setting null should add `JsonNull`
+        run {
+            val key = "key_null"
+            it.add(key, null)
+
+            assertEquals(JsonNull, it.get(key), "null")
+        }
+
+        val inputs = listOf(
+            Input("key_null", implementation.JsonNull()),
+            Input(key = "key_bool", implementation.JsonPrimitive(true)),
+            Input(key = "key_int", implementation.JsonPrimitive(42)),
+            Input(key = "key_object", implementation.JsonObject()),
+            Input(key= "key_array", implementation.JsonArray())
+        )
+
+        for ((key, el) in inputs) {
+            run {
+                it.add(key, el)
+                assertEquals(el, it.get(key), "key")
+            }
+        }
+    }
+
+    @Test
+    fun Native_JsonArray_isJsonArray() {
+        val element = new { of(factory.array()) }
+        assertFalse(element.isJsonPrimitive, "isJsonPrimitive=false")
+        assertFalse(element.isJsonObject, "isJsonObject=false")
+        assertTrue(element.isJsonArray, "isJsonArray=true")
+    }
+
+    @Test
+    fun Native_JsonNull() {
+        val element = new { of(factory.`null`()) }
+        assertFalse(element.isJsonPrimitive, "isJsonPrimitive=false")
+        assertFalse(element.isJsonObject, "isJsonObject=false")
+        assertFalse(element.isJsonArray, "isJsonArray=false")
+
+        // singleton
+        assertEquals(element, io.noties.kojson.api.JsonNull)
+        assertTrue(element === io.noties.kojson.api.JsonNull)
+    }
+
+    //---------------------------------------------------
+    //#endregion [Native]
+    //---------------------------------------------------
+
+    //---------------------------------------------------
+    //#region [JsonPrimitive]
+    //---------------------------------------------------
+
+    @Test
+    fun JsonPrimitive_Boolean() {
+
+        data class BooleanInput(
+            val key: String,
+            val boolean: Boolean? = null,
+            val booleanValue: Boolean
+        ) {
+            constructor(
+                key: String,
+                boolean: Boolean
+            ) : this(key = key, boolean = boolean, booleanValue = boolean)
+        }
+
+        val sample = object : SampleJson {
+            val keyBooleanTrue get() = "boolean_true"
+            val keyBooleanFalse get() = "boolean_false"
+
+            val keyNotBooleanInt get() = "n_boolean_int"
+            val keyNotBooleanFloat get() = "n_boolean_float"
+            val keyNotBooleanFloatRemainder get() = "n_boolean_float_remainder"
+            val keyNotBooleanStringTrue get() = "n_boolean_string_true"
+            val keyNotBooleanStringFalse get() = "n_boolean_string_false"
+            val keyNotBooleanStringOom get() = "n_boolean_string_oom"
+            val keyNotBooleanObject get() = "n_boolean_object"
+            val keyNotBooleanArray get() = "n_boolean_array"
+            val keyNotBooleanNull get() = "n_boolean_null"
+
+            override val rawJson: String
+                get() = """
+                    {
+                      "$keyBooleanTrue": true,
+                      "$keyBooleanFalse": false,
+                      "$keyNotBooleanInt": 1,
+                      "$keyNotBooleanFloat": 1.0,
+                      "$keyNotBooleanFloatRemainder": 1.25,
+                      "$keyNotBooleanStringTrue": "true",
+                      "$keyNotBooleanStringFalse": "false",
+                      "$keyNotBooleanStringOom": "oom",
+                      "$keyNotBooleanObject": {},
+                      "$keyNotBooleanArray": [],
+                      "$keyNotBooleanNull": null
+                    }
+                """.trimIndent()
+        }
+
+        val json = sample.json
+
+        val inputs = listOf(
+            // booleans
+            BooleanInput(key = sample.keyBooleanTrue, boolean = true),
+            BooleanInput(key = sample.keyBooleanFalse, boolean = false),
+
+            // --------------------------------
+            // non-booleans
+            // --------------------------------
+            // `1` is converted to boolean:true
+            BooleanInput(key = sample.keyNotBooleanInt, booleanValue = true),
+
+            // 1.0 is converted to 1, thus == true
+            BooleanInput(key = sample.keyNotBooleanFloat, booleanValue = true),
+
+            // only exact 1.0 is considered boolean true, all the rest are false
+            BooleanInput(key = sample.keyNotBooleanFloatRemainder, booleanValue = false),
+
+            // "true" is true
+            // rest is false
+            BooleanInput(key = sample.keyNotBooleanStringTrue, booleanValue = true),
+            BooleanInput(key = sample.keyNotBooleanStringFalse, booleanValue = false),
+            BooleanInput(key = sample.keyNotBooleanStringOom, booleanValue = false),
+
+            BooleanInput(key = sample.keyNotBooleanObject, booleanValue = false),
+            BooleanInput(key = sample.keyNotBooleanArray, booleanValue = false),
+            BooleanInput(key = sample.keyNotBooleanNull, booleanValue = false),
+        )
+
+        for ((key, boolean, booleanValue) in inputs) {
+            assertEquals(boolean, json[key].boolean, "boolean-$key")
+            assertEquals(booleanValue, json[key].booleanValue, "booleanValue-$key")
+        }
+    }
+
+    private class NumberInput(val key: String, block: NumberInput.() -> Unit = {}) {
+        fun int(int: Int) = this.also {
+            this.int = int
+            this.intValue = int
+        }
+
+        fun intValue(intValue: Int) = this.also {
+            this.int = null
+            this.intValue = intValue
+        }
+
+        fun long(long: Long) = this.also {
+            this.long = long
+            this.longValue = long
+        }
+
+        fun longValue(longValue: Long) = this.also {
+            this.long = null
+            this.longValue = longValue
+        }
+
+        fun float(float: Float) = this.also {
+            this.float = float
+            this.floatValue = float
+        }
+
+        fun floatValue(floatValue: Float) = this.also {
+            this.float = null
+            this.floatValue = floatValue
+        }
+
+        fun double(double: Double) = this.also {
+            this.double = double
+            this.doubleValue = double
+        }
+
+        fun doubleValue(doubleValue: Double) = this.also {
+            this.double = null
+            this.doubleValue = doubleValue
+        }
+
+        fun notNumberValue() = this.also {
+            this.int = null
+            this.intValue = 0
+            this.long = null
+            this.longValue = 0L
+            this.float = null
+            this.floatValue = 0F
+            this.double = null
+            this.doubleValue = 0.0
+        }
+
+        var int: Int? = null
+        var intValue: Int? = null
+
+        var long: Long? = null
+        var longValue: Long? = null
+
+        var float: Float? = null
+        var floatValue: Float? = null
+
+        var double: Double? = null
+        var doubleValue: Double? = null
+
+        init {
+            block(this)
+        }
+    }
+
+    @Test
+    fun JsonPrimitive_Number() {
+
+        val sample = object : SampleJson {
+            val keyInt get() = "key_int"
+            val keyLong get() = "key_long"
+            val keyFloat get() = "key_float"
+            val keyDouble get() = "key_double"
+
+            val keyBoolean get() = "key_boolean"
+            val keyStringInt get() = "key_string_int"
+            val keyStringFloat get() = "key_string_float"
+            val keyObject get() = "key_object"
+            val keyArray get() = "key_array"
+            val keyNull get() = "key_null"
+
+            override val rawJson: String
+                get() = """
+                    {
+                      "$keyInt": 42,
+                      "$keyLong": 100,
+                      "$keyFloat": 4.9,
+                      "$keyDouble": 6.7,
+                      "$keyBoolean": true,
+                      "$keyStringInt": "43",
+                      "$keyStringFloat": "44.2",
+                      "$keyObject": {},
+                      "$keyArray": [],
+                      "$keyNull": null
+                    }
+                """.trimIndent()
+        }
+
+        val json = sample.json
+
+        val inputs = listOf(
+            NumberInput(key = sample.keyInt) {
+                int(42)
+                long(42L)
+                float(42F)
+                double(42.0)
+            },
+            NumberInput(key = sample.keyLong) {
+                int(100)
+                long(100L)
+                float(100F)
+                double(100.0)
+            },
+            NumberInput(key = sample.keyFloat) {
+                // floors
+                int(4)
+                long(4L)
+                float(4.9F)
+                double(4.9)
+            },
+            NumberInput(key = sample.keyDouble) {
+                int(6)
+                long(6L)
+                float(6.7F)
+                double(6.7)
+            },
+            NumberInput(key = sample.keyStringInt) {
+                intValue(43)
+                longValue(43L)
+                floatValue(43F)
+                doubleValue(43.0)
+            },
+            NumberInput(key = sample.keyStringFloat) {
+                intValue(44)
+                longValue(44L)
+                floatValue(44.2F)
+                doubleValue(44.2)
+            },
+            NumberInput(key = sample.keyObject) {
+                notNumberValue()
+            },
+            NumberInput(key = sample.keyArray) {
+                notNumberValue()
+            },
+            NumberInput(key = sample.keyNull) {
+                notNumberValue()
+            }
+        )
+
+        for (input in inputs) {
+            val key = input.key
+
+            assertEquals(input.int, json[key].int, "int-$key")
+            assertEquals(input.intValue, json[key].intValue, "intValue-$key")
+
+            assertEquals(input.long, json[key].long, "long-$key")
+            assertEquals(input.longValue, json[key].longValue, "longValue-$key")
+
+            assertEquals(input.float, json[key].float, "float-$key")
+            assertEquals(input.floatValue, json[key].floatValue, "floatValue-$key")
+
+            assertEquals(input.double, json[key].double, "double-$key")
+            assertEquals(input.doubleValue, json[key].doubleValue, "doubleValue-$key")
+        }
+    }
+
+    private data class StringInput(
+        val key: String,
+        val string: String? = null,
+        val stringValue: String
+    ) {
+        constructor(key: String, string: String) : this(
+            key = key,
+            string = string,
+            stringValue = string
+        )
+    }
+
+    @Test
+    fun JsonPrimitive_String() {
+
+        val sample = object : SampleJson {
+            val keyString get() = "k_string"
+            val keyStringNotEmpty get() = "k_string_not_empty"
+            val keyBoolean get() = "k_boolean"
+            val keyInt get() = "k_int"
+            val keyLong get() = "k_long"
+            val keyFloat get() = "k_float"
+            val keyDouble get() = "k_double"
+            val keyObject get() = "k_object"
+            val keyArray get() = "k_array"
+            val keyNull get() = "k_null"
+
+            override val rawJson: String
+                get() = """
+                {
+                  "$keyString": "",
+                  "$keyStringNotEmpty": "hey ho",
+                  "$keyBoolean": true,
+                  "$keyInt": 42,
+                  "$keyLong": 2147483648,
+                  "$keyFloat": 4.9,
+                  "$keyDouble": 2.3,
+                  "$keyObject": {},
+                  "$keyArray": [],
+                  "$keyNull": null
+                }
+            """.trimIndent()
+        }
+
+        val json = sample.json
+
+        val inputs = listOf(
+            StringInput(key = sample.keyString, string = ""),
+            StringInput(key = sample.keyStringNotEmpty, string = "hey ho"),
+            StringInput(key = sample.keyBoolean, stringValue = "true"),
+            StringInput(key = sample.keyInt, stringValue = "42"),
+            StringInput(key = sample.keyLong, stringValue = "2147483648"),
+            StringInput(key = sample.keyFloat, stringValue = "4.9"),
+            StringInput(key = sample.keyDouble, stringValue = "2.3"),
+            StringInput(key = sample.keyObject, stringValue = ""),
+            StringInput(key = sample.keyArray, stringValue = ""),
+            StringInput(key = sample.keyNull, stringValue = ""),
+        )
+
+        for ((key, string, stringValue) in inputs) {
+            assertEquals(string, json[key].string, "string-$key")
+            assertEquals(stringValue, json[key].stringValue, "string-value-$key")
+        }
+    }
+
+    //---------------------------------------------------
+    //#endregion [JsonPrimitive]
+    //---------------------------------------------------
+
+    //---------------------------------------------------
+    //#region [JsonArray]
+    //---------------------------------------------------
+
+    @Test
+    fun JsonArray() {
+        val sample = object : SampleJson {
+            val keyNull = "key_null"
+            val keyBool = "key_boolean"
+            val keyNumberInt = "key_number_int"
+            val keyNumberLong = "key_number_long"
+            val keyNumberFloat = "key_number_float"
+            val keyNumberDouble = "key_number_double"
+            val keyString = "key_string"
+            val keyObject = "{}"
+            val keyArray = "[]"
+
+            override val rawJson: String
+                get() = """
+                    {
+                      "$keyNull": null,
+                      "$keyBool": true,
+                      "$keyNumberInt": 42,
+                      "$keyNumberLong": 2147483648,
+                      "$keyNumberFloat": 4.9,
+                      "$keyNumberDouble": 5.1,
+                      "$keyString": "",
+                      "$keyObject": {},
+                      "$keyArray": []
+                    }
+                """.trimIndent()
+        }
+
+        val json = sample.json
+
+        data class Input(val key: String, val isArray: Boolean)
+
+        val inputs = listOf(
+            Input(key = sample.keyNull, isArray = false),
+            Input(key = sample.keyBool, isArray = false),
+            Input(key = sample.keyNumberInt, isArray = false),
+            Input(key = sample.keyNumberLong, isArray = false),
+            Input(key = sample.keyNumberFloat, isArray = false),
+            Input(key = sample.keyNumberDouble, isArray = false),
+            Input(key = sample.keyString, isArray = false),
+            Input(key = sample.keyObject, isArray = false),
+            Input(key = sample.keyArray, isArray = true),
+        )
+
+        for ((key, isArray) in inputs) {
+            if (isArray) {
+                assertEquals(emptyList(), json[key].array, "is-array-$key")
+                assertEquals(emptyList(), json[key].arrayValue, "is-array-value-$key")
+                assertEquals(emptyList(), json[key].jsonArray, "is-json-array-$key")
+                assertEquals(emptyList(), json[key].jsonArrayValue, "is-json-array-value-$key")
+            } else {
+                assertNull(json[key].array, "null-$key")
+                assertEquals(emptyList(), json[key].arrayValue, "not-array-value-$key")
+            }
+        }
+    }
+
+    //---------------------------------------------------
+    //#endregion [JsonArray]
+    //---------------------------------------------------
+
+    //---------------------------------------------------
+    //#region [JsonObject]
+    //---------------------------------------------------
+
+    @Test
+    fun JsonObject_any() {
+        val sample = object : SampleJson {
+            val keyNull = "key_null"
+            val keyBool = "key_boolean"
+            val keyNumberInt = "key_number_int"
+            val keyNumberLong = "key_number_long"
+            val keyNumberFloat = "key_number_float"
+            val keyNumberDouble = "key_number_double"
+            val keyString = "key_string"
+            val keyObject = "{}"
+            val keyArray = "[]"
+
+            override val rawJson: String
+                get() = """
+                    {
+                      "$keyNull": null,
+                      "$keyBool": true,
+                      "$keyNumberInt": 42,
+                      "$keyNumberLong": 2147483648,
+                      "$keyNumberFloat": 4.9,
+                      "$keyNumberDouble": 5.1,
+                      "$keyString": "",
+                      "$keyObject": {},
+                      "$keyArray": []
+                    }
+                """.trimIndent()
+
+            val keys = setOf(
+                keyNull,
+                keyBool,
+                keyNumberInt,
+                keyNumberLong,
+                keyNumberFloat,
+                keyNumberDouble,
+                keyString,
+                keyObject,
+                keyArray,
+            )
+        }
+
+        // does not contain anything
+        val json = sample.json
+
+        val notExistingKey = "whatever_42"
+
+        for (key in sample.keys) {
+            val el = json[key][notExistingKey]
+
+            assertNull(el.element)
+            assertEquals(false, el.exists())
+            assertEquals(false, el.existsNotNull())
+
+            assertNull(el.boolean)
+            assertNull(el.int)
+            assertNull(el.long)
+            assertNull(el.float)
+            assertNull(el.double)
+            assertNull(el.string)
+            assertNull(el.array)
+            assertNull(el.jsonArray)
+        }
+    }
+
+    @Test
+    fun JsonObject_exists() {
+        val sample = object : SampleJson {
+            val keyNull = "some.object.that.equals.key_null"
+            val keyBool = "that.this.key_boolean"
+            val keyNumberInt = "some.yes.that.key_int"
+            val keyNumberLong = "that.this.key_long"
+            val keyNumberFloat = "some.object.this.key_float"
+            val keyNumberDouble = "key_double"
+            val keyString = "some.key_string"
+            val keyObject = "some.object.yes.yes.no.key_object"
+            val keyArray = "some.42.key_array"
+
+            fun build(): String {
+                // value can be:
+                //  - map<String, Any> (which in turn can be map<string, any>, or actual value)
+                //  - string (actual value)
+                val root = mutableMapOf<String, Any>()
+
+                fun el(path: String, value: String) {
+                    val components = path.split(".")
+                    if (components.size == 1) {
+                        root[components[0]] = value
+                    } else {
+                        // last one is the key of teh value
+                        val key = components.last()
+
+                        val last = components
+                            .dropLast(1)
+                            .fold(root) { acc, value ->
+                                acc.putIfAbsent(value, mutableMapOf<String, Any>())
+                                @Suppress("UNCHECKED_CAST")
+                                acc[value] as MutableMap<String, Any>
+                            }
+                        last[key] = value
+                    }
+                }
+
+                el(keyNull, "null")
+                el(keyBool, "true")
+                el(keyNumberInt, "42")
+                el(keyNumberLong, "9999999999")
+                el(keyNumberFloat, "4.9")
+                el(keyNumberDouble, "3.3")
+                el(keyString, "\"okay\"")
+                el(keyObject, "{}")
+                el(keyArray, "[]")
+
+                val builder = StringBuilder()
+
+                fun render(value: Any) {
+                    when (value) {
+                        is Map<*, *> -> {
+                            builder.append("{")
+                            val length = builder.length
+                            for ((key, value) in value) {
+
+                                if (length != builder.length) {
+                                    builder.append(",")
+                                }
+
+                                builder
+                                    .append("\"")
+                                    .append(key)
+                                    .append("\"")
+                                    .append(":")
+
+                                render(value!!)
+                            }
+                            builder.append("}")
+                        }
+
+                        is String -> {
+                            builder.append(value)
+                        }
+
+                        else -> {
+                            error("Unexpected value:$value")
+                        }
+                    }
+                }
+
+                render(root)
+
+                return builder.toString()
+            }
+
+            override val rawJson: String get() = build()
+        }
+
+        val json = sample.json
+
+        data class Input(val path: String, val exists: Boolean, val existsNotNull: Boolean)
+
+        val inputs = listOf(
+            // existing
+            Input(path = sample.keyNull, exists = true, existsNotNull = false),
+            Input(path = sample.keyBool, exists = true, existsNotNull = true),
+            Input(path = sample.keyNumberInt, exists = true, existsNotNull = true),
+            Input(path = sample.keyNumberLong, exists = true, existsNotNull = true),
+            Input(path = sample.keyNumberFloat, exists = true, existsNotNull = true),
+            Input(path = sample.keyNumberDouble, exists = true, existsNotNull = true),
+            Input(path = sample.keyString, exists = true, existsNotNull = true),
+            Input(path = sample.keyObject, exists = true, existsNotNull = true),
+            Input(path = sample.keyArray, exists = true, existsNotNull = true),
+
+            // not existing
+            Input(path = "not.existing.key_whatever", exists = false, existsNotNull = false),
+            Input(path = "not.some", exists = false, existsNotNull = false),
+            Input(path = "this.that.noop", exists = false, existsNotNull = false),
+        )
+
+        fun el(path: String): Json {
+            return path.split(".")
+                .fold(json) { a, v ->
+                    a[v]
+                }
+        }
+
+        for ((path, exists, existsNotNull) in inputs) {
+            val el = el(path)
+            assertEquals(exists, el.exists(), "exists-$path")
+            assertEquals(existsNotNull, el.existsNotNull(), "existsNotNull-$path")
+        }
+    }
+
+    //---------------------------------------------------
+    //#endregion [JsonObject]
+    //---------------------------------------------------
+}
