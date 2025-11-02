@@ -84,7 +84,11 @@ public class Json(
         }
 
     /**
-     * # Int
+     * Strict Int.
+     *
+     * __NB__ as JSON spec does not distinguish between numeric types, it is possible
+     * to have an unexpected conversion from a floating number to a decimal one. For example,
+     * `42.2` will be returned as `42`
      */
     public val int: Int?
         get() = element?.jsonPrimitive?.let {
