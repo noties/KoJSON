@@ -1532,4 +1532,144 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
             assertEquals(value, json[key].floatValue, "key:$key json:$jsonObject")
         }
     }
+
+    @Test
+    fun Json_double() {
+        data class Input(
+            val key: String,
+            val value: Double?,
+            val create: JsonObject.(String) -> Unit
+        )
+
+        val inputs = listOf(
+            Input(
+                key = "int",
+                value = 42.0,
+                create = { this[it] = 42 }
+            ),
+            Input(
+                key = "long",
+                value = 42.0,
+                create = { this[it] = 42L }
+            ),
+            Input(
+                key = "float",
+                value = 42.9,
+                create = { this[it] = 42.9F }
+            ),
+            Input(
+                key = "double",
+                value = 42.9,
+                create = { this[it] = 42.9 }
+            ),
+            Input(
+                key = "bool_false",
+                value = null,
+                create = { this[it] = false }
+            ),
+            Input(
+                key = "bool_true",
+                value = null,
+                create = { this[it] = true }
+            ),
+            Input(
+                key = "string",
+                value = null,
+                create = { this[it] = "42.9" }
+            ),
+            Input(
+                key = "object",
+                value = null,
+                create = { this[it] = implementation.JsonObject() }
+            ),
+            Input(
+                key = "array",
+                value = null,
+                create = { this[it] = implementation.JsonArray() }
+            ),
+        )
+
+        for ((key, value, create) in inputs) {
+            val jsonObject = implementation.JsonObject()
+            val json = Json(jsonObject)
+            create.invoke(jsonObject, key)
+
+            assertEquals(value, json[key].double, "key:$key json:$jsonObject")
+        }
+    }
+
+    @Test
+    fun Json_doubleValue() {
+        data class Input(
+            val key: String,
+            val value: Double,
+            val create: JsonObject.(String) -> Unit
+        )
+
+        val inputs = listOf(
+            Input(
+                key = "int",
+                value = 42.0,
+                create = { this[it] = 42 }
+            ),
+            Input(
+                key = "long",
+                value = 42.0,
+                create = { this[it] = 42L }
+            ),
+            Input(
+                key = "float",
+                value = 42.9,
+                create = { this[it] = 42.9F }
+            ),
+            Input(
+                key = "double",
+                value = 42.9,
+                create = { this[it] = 42.9 }
+            ),
+            Input(
+                key = "string_int",
+                value = 43.0,
+                create = { this[it] = "43" }
+            ),
+            Input(
+                key = "string_float",
+                value = 44.9,
+                create = { this[it] = "44.9" }
+            ),
+            Input(
+                key = "bool_false",
+                value = 0.0,
+                create = { this[it] = false }
+            ),
+            Input(
+                key = "bool_true",
+                value = 0.0,
+                create = { this[it] = true }
+            ),
+            Input(
+                key = "object",
+                value = 0.0,
+                create = { this[it] = implementation.JsonObject() }
+            ),
+            Input(
+                key = "array",
+                value = 0.0,
+                create = { this[it] = implementation.JsonArray() }
+            ),
+            Input(
+                key = "null",
+                value = 0.0,
+                create = { this[it] = JsonNull }
+            ),
+        )
+
+        for ((key, value, create) in inputs) {
+            val jsonObject = implementation.JsonObject()
+            val json = Json(jsonObject)
+            create.invoke(jsonObject, key)
+
+            assertEquals(value, json[key].doubleValue, "key:$key json:$jsonObject")
+        }
+    }
 }
