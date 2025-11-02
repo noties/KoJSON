@@ -187,6 +187,52 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
         assertEquals(false, json["some_weird"].existsNotNull())
     }
 
+    @Test
+    fun Json_existsNotNull() {
+        data class Input(
+            val key: String,
+            val value: JsonElement?,
+            val existsNotNull: Boolean
+        )
+
+        val inputs = listOf(
+            Input(
+                key = "null",
+                value = JsonNull,
+                existsNotNull = false
+            ),
+            Input(
+                key = "bool",
+                value = implementation.JsonPrimitive(true),
+                existsNotNull = true
+            ),
+            Input(
+                key = "int",
+                value = implementation.JsonPrimitive(42),
+                existsNotNull = true
+            ),
+            Input(
+                key = "object",
+                value = implementation.JsonObject(),
+                existsNotNull = true
+            ),
+            Input(
+                key = "array",
+                value = implementation.JsonArray(),
+                existsNotNull = true
+            )
+        )
+
+        for ((key, value, existsNotNull) in inputs) {
+            val element = Json(value)
+            assertEquals(existsNotNull, element.existsNotNull(), "key:$key element:$value")
+        }
+
+        // ensure missing element (null root) reports false
+        val missing = Json(null)
+        assertEquals(false, missing.existsNotNull())
+    }
+
 //    @Test
 //    fun Json_comments() {
 //        // json engine must allow comments, isn't it too big stretch to assume that?
