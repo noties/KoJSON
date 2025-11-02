@@ -1701,4 +1701,154 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
             )
         }
     }
+
+    @Test
+    fun Json_string() {
+        data class Input(
+            val key: String,
+            val value: String?,
+            val create: JsonObject.(String) -> Unit
+        )
+
+        val inputs = listOf(
+            Input(
+                key = "string",
+                value = "value",
+                create = { this[it] = "value" }
+            ),
+            Input(
+                key = "string_empty",
+                value = "",
+                create = { this[it] = "" }
+            ),
+            Input(
+                key = "int",
+                value = null,
+                create = { this[it] = 42 }
+            ),
+            Input(
+                key = "long",
+                value = null,
+                create = { this[it] = 42L }
+            ),
+            Input(
+                key = "float",
+                value = null,
+                create = { this[it] = 42.9F }
+            ),
+            Input(
+                key = "double",
+                value = null,
+                create = { this[it] = 42.9 }
+            ),
+            Input(
+                key = "bool_false",
+                value = null,
+                create = { this[it] = false }
+            ),
+            Input(
+                key = "bool_true",
+                value = null,
+                create = { this[it] = true }
+            ),
+            Input(
+                key = "object",
+                value = null,
+                create = { this[it] = implementation.JsonObject() }
+            ),
+            Input(
+                key = "array",
+                value = null,
+                create = { this[it] = implementation.JsonArray() }
+            ),
+            Input(
+                key = "null",
+                value = null,
+                create = { this[it] = JsonNull }
+            ),
+        )
+
+        for ((key, value, create) in inputs) {
+            val jsonObject = implementation.JsonObject()
+            val json = Json(jsonObject)
+            create.invoke(jsonObject, key)
+
+            assertEquals(value, json[key].string, "key:$key json:$jsonObject")
+        }
+    }
+
+    @Test
+    fun Json_stringValue() {
+        data class Input(
+            val key: String,
+            val value: String,
+            val create: JsonObject.(String) -> Unit
+        )
+
+        val inputs = listOf(
+            Input(
+                key = "string",
+                value = "value",
+                create = { this[it] = "value" }
+            ),
+            Input(
+                key = "string_empty",
+                value = "",
+                create = { this[it] = "" }
+            ),
+            Input(
+                key = "int",
+                value = "42",
+                create = { this[it] = 42 }
+            ),
+            Input(
+                key = "long",
+                value = "42",
+                create = { this[it] = 42L }
+            ),
+            Input(
+                key = "float",
+                value = "42.9",
+                create = { this[it] = 42.9F }
+            ),
+            Input(
+                key = "double",
+                value = "42.9",
+                create = { this[it] = 42.9 }
+            ),
+            Input(
+                key = "bool_false",
+                value = "false",
+                create = { this[it] = false }
+            ),
+            Input(
+                key = "bool_true",
+                value = "true",
+                create = { this[it] = true }
+            ),
+            Input(
+                key = "object",
+                value = "",
+                create = { this[it] = implementation.JsonObject() }
+            ),
+            Input(
+                key = "array",
+                value = "",
+                create = { this[it] = implementation.JsonArray() }
+            ),
+            Input(
+                key = "null",
+                value = "",
+                create = { this[it] = JsonNull }
+            ),
+        )
+
+        for ((key, value, create) in inputs) {
+            val jsonObject = implementation.JsonObject()
+            val json = Json(jsonObject)
+            create.invoke(jsonObject, key)
+
+            assertEquals(value, json[key].stringValue, "key:$key json:$jsonObject")
+        }
+    }
 }
