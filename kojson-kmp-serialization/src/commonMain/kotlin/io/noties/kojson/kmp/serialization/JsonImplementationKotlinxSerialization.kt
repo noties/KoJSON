@@ -24,6 +24,10 @@ import kotlinx.serialization.json.JsonPrimitive as KsonPrimitive
 
 public val KsonElement.json: Json get() = Json(JsonImplementationKotlinxSerialization.of(this))
 
+// Alias to `json`
+@Suppress("SpellCheckingInspection")
+public val KsonElement.kojson: Json get() = json
+
 @Suppress("SpellCheckingInspection")
 public val Json.kson: KsonElement
     get() = JsonImplementationKotlinxSerialization.unwrap(element ?: JsonNull)

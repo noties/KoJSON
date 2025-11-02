@@ -15,6 +15,10 @@ import com.google.gson.JsonPrimitive as GsonPrimitive
 
 public val GsonElement.json: Json get() = Json(JsonImplementationGson.of(this))
 
+// Alias to `json`
+@Suppress("SpellCheckingInspection")
+public val GsonElement.kojson: Json get() = json
+
 // this is a little weird, because it falls back to JsonNull, which might be confusing
 //  as there is difference between java-null and json-null, so if a thing is absent it should
 //  be undefined, like java-null, but if it is `null` in json, it should be json-null
