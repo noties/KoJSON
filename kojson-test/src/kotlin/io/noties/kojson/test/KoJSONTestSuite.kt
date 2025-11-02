@@ -146,7 +146,7 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
 
     @Test
     fun Json_defaults() {
-        val json = Json()
+        val json = Json(null)
 
         assertEquals(false, json.booleanValue)
         assertEquals(0, json.intValue)
@@ -872,4 +872,184 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
     //---------------------------------------------------
     //#endregion [JsonObject]
     //---------------------------------------------------
+
+    @Test
+    fun Json_boolean() {
+        data class Input(
+            val key: String,
+            val value: Boolean?,
+            val create: JsonObject.(String) -> Unit
+        )
+
+        val inputs = listOf(
+            Input(
+                key = "bool_false",
+                value = false,
+                create = { this[it] = false }
+            ),
+            Input(
+                key = "bool_true",
+                value = true,
+                create = { this[it] = true }
+            ),
+            Input(
+                key = "int",
+                value = null,
+                create = { this[it] = 42 }
+            ),
+            Input(
+                key = "long",
+                value = null,
+                create = { this[it] = 42L }
+            ),
+            Input(
+                key = "float",
+                value = null,
+                create = { this[it] = 42.0F }
+            ),
+            Input(
+                key = "double",
+                value = null,
+                create = { this[it] = 42.0 }
+            ),
+            Input(
+                key = "string",
+                value = null,
+                create = { this[it] = "42" }
+            ),
+            Input(
+                key = "object",
+                value = null,
+                create = { this[it] = implementation.JsonObject() }
+            ),
+            Input(
+                key = "array",
+                value = null,
+                create = { this[it] = implementation.JsonArray() }
+            ),
+        )
+
+        for ((key, value, create) in inputs) {
+            val jsonObject = implementation.JsonObject()
+            val json = Json(jsonObject)
+            create.invoke(jsonObject, key)
+
+            assertEquals(value, json[key].boolean, "key:$key json:$jsonObject")
+        }
+    }
+
+    @Test
+    fun Json_booleanValue() {
+        data class Input(
+            val key: String,
+            val value: Boolean?,
+            val create: JsonObject.(String) -> Unit
+        )
+
+        val inputs = listOf(
+            Input(
+                key = "bool_false",
+                value = false,
+                create = { this[it] = false }
+            ),
+            Input(
+                key = "bool_true",
+                value = true,
+                create = { this[it] = true }
+            ),
+            Input(
+                key = "int",
+                value = false,
+                create = { this[it] = 42 }
+            ),
+            Input(
+                key = "long",
+                value = false,
+                create = { this[it] = 42L }
+            ),
+            Input(
+                key = "float",
+                value = false,
+                create = { this[it] = 42.0F }
+            ),
+            Input(
+                key = "double",
+                value = false,
+                create = { this[it] = 42.0 }
+            ),
+            Input(
+                key = "string",
+                value = false,
+                create = { this[it] = "42" }
+            ),
+            Input(
+                key = "int_true",
+                value = true,
+                create = { this[it] = 1 }
+            ),
+            Input(
+                key = "int_false",
+                value = false,
+                create = { this[it] = 0 }
+            ),
+            Input(
+                key = "long_true",
+                value = true,
+                create = { this[it] = 1L }
+            ),
+            Input(
+                key = "long_false",
+                value = false,
+                create = { this[it] = 0L }
+            ),
+            Input(
+                key = "float_true",
+                value = true,
+                create = { this[it] = 1.0F }
+            ),
+            Input(
+                key = "float_false",
+                value = false,
+                create = { this[it] = 0.0F }
+            ),
+            Input(
+                key = "double_true",
+                value = true,
+                create = { this[it] = 1.0 }
+            ),
+            Input(
+                key = "double_false",
+                value = false,
+                create = { this[it] = 0.0 }
+            ),
+            Input(
+                key = "string_true",
+                value = true,
+                create = { this[it] = "true" }
+            ),
+            Input(
+                key = "string_false",
+                value = false,
+                create = { this[it] = "false" }
+            ),
+            Input(
+                key = "object",
+                value = false,
+                create = { this[it] = implementation.JsonObject() }
+            ),
+            Input(
+                key = "array",
+                value = false,
+                create = { this[it] = implementation.JsonArray() }
+            ),
+        )
+
+        for ((key, value, create) in inputs) {
+            val jsonObject = implementation.JsonObject()
+            val json = Json(jsonObject)
+            create.invoke(jsonObject, key)
+
+            assertEquals(value, json[key].booleanValue, "key:$key json:$jsonObject")
+        }
+    }
 }

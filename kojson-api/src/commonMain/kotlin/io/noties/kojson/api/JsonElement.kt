@@ -1,32 +1,5 @@
 package io.noties.kojson.api
 
-public abstract class JsonImplementation<T : Any> {
-    // for extensions
-    public companion object;
-
-    public abstract fun JsonObject(): JsonObject
-
-    public abstract fun JsonArray(): JsonArray
-
-    public abstract fun JsonPrimitive(value: Boolean): JsonPrimitive
-    public abstract fun JsonPrimitive(value: Int): JsonPrimitive
-    public abstract fun JsonPrimitive(value: Long): JsonPrimitive
-    public abstract fun JsonPrimitive(value: Float): JsonPrimitive
-    public abstract fun JsonPrimitive(value: Double): JsonPrimitive
-    public abstract fun JsonPrimitive(value: String): JsonPrimitive
-
-    public fun JsonNull(): JsonNull = JsonNull
-
-    // Intended to receive only real json element object
-    public abstract fun of(type: T): JsonElement
-
-    public abstract fun unwrap(element: JsonElement): T
-
-    public fun new(block: JsonImplementation<T>.() -> JsonElement): JsonElement {
-        return block(this)
-    }
-}
-
 public sealed interface JsonElement {
 
     // to postpone checks, to move to runtime, so those are not parsed/initialized for each property
@@ -87,6 +60,7 @@ public interface JsonObject : JsonElement {
     public operator fun JsonObject.set(key: String, value: Double): Unit = addProperty(key, value)
     public operator fun JsonObject.set(key: String, value: String): Unit = addProperty(key, value)
     public operator fun JsonObject.set(key: String, value: JsonElement?): Unit = add(key, value)
+
     // TODO: check this
 //    public operator fun JsonObject.set(key: String, value: JsonObject.() -> Unit): Unit
 }

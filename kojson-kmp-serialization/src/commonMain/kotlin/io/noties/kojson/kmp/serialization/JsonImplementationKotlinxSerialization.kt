@@ -234,7 +234,7 @@ internal class KsonPrimitiveImpl(
     override val isBoolean: Boolean
         /**
          * We do not want `"true"` to be returned here as boolean, as it is not - it is string!
-         * It is weird that it is how it works on kotlin.serialization side
+         * It is weird that it is how it works on `kotlin.serialization` side
          */
         get() = if (jsonPrimitive.isString) false else jsonPrimitive.booleanOrNull != null
 

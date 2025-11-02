@@ -7,19 +7,62 @@ import kotlin.math.abs
 //  (say - greater than Int.MAX_VALUE), then it is better to send those numbers as strings and
 //  parse them explicitly.
 public class Json(
-    public val element: JsonElement? = null
+    public val element: JsonElement?
 ) {
 
-    /**
-     * # Boolean
-     */
-    public val boolean: Boolean? get() = element?.jsonPrimitive?.let {
-        if (it.isBoolean) it.asBoolean else null
+    public companion object {
+        /**ø
+         * Only as a convenience for a shortcut to call [new]. There is no restriction on
+         * the number of implementations.
+         */
+        public lateinit var implementation: JsonImplementation<*>
+
+        /**
+         * It might be tedious, but providing an implementation by default
+         * at this point seems a little complicated. It could have worked, if we would support
+         * only a single implementation (which is not the case, as we do not limit it in any way)
+         * and then providing some file with implementation class name (the Java way). But
+         * even that would not work with Kotlin MP, as they do not have support of bundling files.
+         *
+         * Suggested workaround is to create a dedicated extension in the app code that would provide
+         * automatically desired implementation. Or just set it the [implementation] property
+         * to be used as default.
+         *
+         * __NB__ this call will fail if no `implementation` is supplied and if
+         * `Companion.implementation` is not set.
+         *
+         * By default, does not require any arguments, and JsonObject is used as the default element
+         */
+        public fun new(
+            factory: JsonFactory = Companion.implementation,
+            block: JsonFactory.() -> JsonElement = { JsonObject() }
+        ): Json {
+            val element = block(factory)
+            return Json(element = element)
+        }
     }
 
-    // if number, then 1 == true,
-    //  if string then "true" == true
-    // else getAsBoolean
+    /**
+     * Strict boolean.
+     * Returns a boolean only if the JSON element exists and its value is a boolean; otherwise returns null.
+     *
+     * @see booleanValue
+     */
+    public val boolean: Boolean?
+        get() = element?.jsonPrimitive?.let {
+            if (it.isBoolean) it.asBoolean else null
+        }
+
+    /**
+     * Best-effort boolean.
+     * Attempts to parse the JSON element as a boolean by:
+     * - Using [boolean] for strict boolean values
+     * - Interpreting numeric `1` or `1.0` as true
+     * - Interpreting string `"true"` as true
+     * - `false` otherwise
+     *
+     * @see boolean
+     */
     public val booleanValue: Boolean
         get() = boolean ?: run {
             val primitive: JsonPrimitive = element?.jsonPrimitive ?: return false
@@ -31,71 +74,85 @@ public class Json(
                 primitive.isNumber -> primitive.asFloat?.let {
                     abs(1F / it - 1F) < 0.000001F
                 } ?: false
+
+                // only if it is a direct match to `true`, false otherwise
                 primitive.isString -> "true".equals(primitive.asString, true)
-                else -> primitive.asBoolean ?: false
+
+                // at this point we have covered all values, no need to pass it to native impl with `asBoolean`
+                else -> false
             }
         }
 
     /**
      * # Int
      */
-    public val int: Int? get() = element?.jsonPrimitive?.let {
-        if (it.isNumber) it.asInt else null
-    }
-
-    public val intValue: Int get() = int
-        ?: element?.jsonPrimitive?.asString?.let {
-            it.toIntOrNull() ?: it.toFloatOrNull()?.toInt()
+    public val int: Int?
+        get() = element?.jsonPrimitive?.let {
+            if (it.isNumber) it.asInt else null
         }
-        ?: 0
+
+    public val intValue: Int
+        get() = int
+            ?: element?.jsonPrimitive?.asString?.let {
+                it.toIntOrNull() ?: it.toFloatOrNull()?.toInt()
+            }
+            ?: 0
 
     /**
      * # Long
      */
-    public val long: Long? get() = element?.jsonPrimitive?.let {
-        if (it.isNumber) it.asLong else null
-    }
-
-    public val longValue: Long get() = long
-        ?: element?.jsonPrimitive?.asString?.let {
-            it.toLongOrNull() ?: it.toDoubleOrNull()?.toLong()
+    public val long: Long?
+        get() = element?.jsonPrimitive?.let {
+            if (it.isNumber) it.asLong else null
         }
-        ?: 0L
+
+    public val longValue: Long
+        get() = long
+            ?: element?.jsonPrimitive?.asString?.let {
+                it.toLongOrNull() ?: it.toDoubleOrNull()?.toLong()
+            }
+            ?: 0L
 
     /**
      * # Float
      */
-    public val float: Float? get() = element?.jsonPrimitive?.let {
-        if (it.isNumber) it.asFloat else null
-    }
+    public val float: Float?
+        get() = element?.jsonPrimitive?.let {
+            if (it.isNumber) it.asFloat else null
+        }
 
-    public val floatValue: Float get() = float
-        ?: element?.jsonPrimitive?.asString?.toFloatOrNull()
-        ?: 0F
+    public val floatValue: Float
+        get() = float
+            ?: element?.jsonPrimitive?.asString?.toFloatOrNull()
+            ?: 0F
 
 
     /**
      * # Double
      */
-    public val double: Double? get() = element?.jsonPrimitive?.let {
-        if (it.isNumber) it.asDouble else null
-    }
+    public val double: Double?
+        get() = element?.jsonPrimitive?.let {
+            if (it.isNumber) it.asDouble else null
+        }
 
-    public val doubleValue: Double get() = double
-        ?: element?.jsonPrimitive?.asString?.toDoubleOrNull()
-        ?: 0.0
+    public val doubleValue: Double
+        get() = double
+            ?: element?.jsonPrimitive?.asString?.toDoubleOrNull()
+            ?: 0.0
 
 
     /**
      * # String
      */
-    public val string: String? get() = element?.jsonPrimitive?.let {
-        if (it.isString) it.asString else null
-    }
+    public val string: String?
+        get() = element?.jsonPrimitive?.let {
+            if (it.isString) it.asString else null
+        }
 
-    public val stringValue: String get() = string
-        ?: element?.jsonPrimitive?.asString
-        ?: ""
+    public val stringValue: String
+        get() = string
+            ?: element?.jsonPrimitive?.asString
+            ?: ""
 
 
     /**
