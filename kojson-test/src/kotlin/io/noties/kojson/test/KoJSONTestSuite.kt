@@ -1977,4 +1977,155 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
             assertEquals(expectedValues, actual.map { it.stringValue }, "key:$key json:$jsonObject")
         }
     }
+
+    @Test
+    fun Json_jsonArray() {
+        data class Input(
+            val key: String,
+            val create: JsonObject.(String) -> List<JsonElement?>?
+        )
+
+        val inputs = listOf(
+            Input(
+                key = "array",
+                create = {
+                    val array = implementation.JsonArray()
+                    val elements = listOf<JsonElement?>(
+                        implementation.JsonPrimitive("one"),
+                        JsonNull,
+                        implementation.JsonPrimitive("two")
+                    )
+                    elements.forEach { element -> array.add(element) }
+                    this[it] = array
+                    elements
+                }
+            ),
+            Input(
+                key = "empty_array",
+                create = {
+                    val array = implementation.JsonArray()
+                    this[it] = array
+                    emptyList()
+                }
+            ),
+            Input(
+                key = "int",
+                create = {
+                    this[it] = 42
+                    null
+                }
+            ),
+            Input(
+                key = "bool",
+                create = {
+                    this[it] = true
+                    null
+                }
+            ),
+            Input(
+                key = "object",
+                create = {
+                    this[it] = implementation.JsonObject()
+                    null
+                }
+            ),
+            Input(
+                key = "null",
+                create = {
+                    this[it] = JsonNull
+                    null
+                }
+            ),
+        )
+
+        for ((key, create) in inputs) {
+            val jsonObject = implementation.JsonObject()
+            val json = Json(jsonObject)
+            val expected = create.invoke(jsonObject, key)
+
+            val actual = json[key].jsonArray
+            if (expected == null) {
+                assertEquals(null, actual, "key:$key json:$jsonObject")
+            } else {
+                assertNotNull(actual, "key:$key json:$jsonObject")
+                assertEquals(expected.size, actual.size, "size-$key json:$jsonObject")
+                expected.zip(actual).forEachIndexed { index, (exp, act) ->
+                    assertEquals(exp, act, "key:$key index:$index json:$jsonObject")
+                }
+            }
+        }
+    }
+
+    @Test
+    fun Json_jsonArrayValue() {
+        data class Input(
+            val key: String,
+            val create: JsonObject.(String) -> List<JsonElement>
+        )
+
+        val inputs = listOf(
+            Input(
+                key = "array",
+                create = {
+                    val array = implementation.JsonArray()
+                    val elements = listOf<JsonElement>(
+                        implementation.JsonPrimitive("one"),
+                        JsonNull,
+                        implementation.JsonPrimitive("two")
+                    )
+                    elements.forEach { element -> array.add(element) }
+                    this[it] = array
+                    elements
+                }
+            ),
+            Input(
+                key = "empty_array",
+                create = {
+                    val array = implementation.JsonArray()
+                    this[it] = array
+                    emptyList()
+                }
+            ),
+            Input(
+                key = "int",
+                create = {
+                    this[it] = 42
+                    emptyList()
+                }
+            ),
+            Input(
+                key = "bool",
+                create = {
+                    this[it] = false
+                    emptyList()
+                }
+            ),
+            Input(
+                key = "object",
+                create = {
+                    this[it] = implementation.JsonObject()
+                    emptyList()
+                }
+            ),
+            Input(
+                key = "null",
+                create = {
+                    this[it] = JsonNull
+                    emptyList()
+                }
+            ),
+        )
+
+        for ((key, create) in inputs) {
+            val jsonObject = implementation.JsonObject()
+            val json = Json(jsonObject)
+            val expected = create.invoke(jsonObject, key)
+
+            val actual = json[key].jsonArrayValue
+            assertEquals(expected.size, actual.size, "size-$key json:$jsonObject")
+            expected.zip(actual).forEachIndexed { index, (exp, act) ->
+                assertEquals(exp, act, "key:$key index:$index json:$jsonObject")
+            }
+        }
+    }
 }
