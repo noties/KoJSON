@@ -5,6 +5,8 @@ import io.noties.kojson.api.JsonElement
 import io.noties.kojson.api.JsonImplementation
 import io.noties.kojson.api.JsonNull
 import io.noties.kojson.api.JsonObject
+import io.noties.kojson.api.takeIfExists
+import io.noties.kojson.api.takeIfExistsNotNull
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -231,6 +233,92 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
         // ensure missing element (null root) reports false
         val missing = Json(null)
         assertEquals(false, missing.existsNotNull())
+    }
+
+    @Test
+    fun Json_takeIfExists() {
+        val sample = object : SampleJson {
+            val keyNull = "key_null"
+            val keyBool = "key_bool"
+            val keyInt = "key_int"
+
+            override val rawJson: String
+                get() = """
+                    {
+                      "$keyNull": null,
+                      "$keyBool": true,
+                      "$keyInt": 42
+                    }
+                """.trimIndent()
+        }
+
+        val json = sample.json
+
+        val nullElement = json[sample.keyNull]
+        val boolElement = json[sample.keyBool]
+        val intElement = json[sample.keyInt]
+        val missingElement = json["missing"]
+
+        run {
+            val result = nullElement.takeIfExists()
+            assertNotNull(result, "null element must be returned")
+            assertTrue(result === nullElement)
+        }
+
+        run {
+            val result = boolElement.takeIfExists()
+            assertNotNull(result, "bool element must be returned")
+            assertTrue(result === boolElement)
+        }
+
+        run {
+            val result = intElement.takeIfExists()
+            assertNotNull(result, "int element must be returned")
+            assertTrue(result === intElement)
+        }
+
+        assertEquals(null, missingElement.takeIfExists(), "missing element must be null")
+    }
+
+    @Test
+    fun Json_takeIfExistsNotNull() {
+        val sample = object : SampleJson {
+            val keyNull = "key_null"
+            val keyBool = "key_bool"
+            val keyInt = "key_int"
+
+            override val rawJson: String
+                get() = """
+                    {
+                      "$keyNull": null,
+                      "$keyBool": true,
+                      "$keyInt": 42
+                    }
+                """.trimIndent()
+        }
+
+        val json = sample.json
+
+        val nullElement = json[sample.keyNull]
+        val boolElement = json[sample.keyBool]
+        val intElement = json[sample.keyInt]
+        val missingElement = json["missing"]
+
+        assertEquals(null, nullElement.takeIfExistsNotNull(), "null element must be filtered out")
+
+        run {
+            val result = boolElement.takeIfExistsNotNull()
+            assertNotNull(result, "bool element must be returned")
+            assertTrue(result === boolElement)
+        }
+
+        run {
+            val result = intElement.takeIfExistsNotNull()
+            assertNotNull(result, "int element must be returned")
+            assertTrue(result === intElement)
+        }
+
+        assertEquals(null, missingElement.takeIfExistsNotNull(), "missing element must be null")
     }
 
 //    @Test
