@@ -1212,4 +1212,164 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
             assertEquals(value, json[key].intValue, "key:$key json:$jsonObject")
         }
     }
+
+    @Test
+    fun Json_long() {
+        data class Input(
+            val key: String,
+            val value: Long?,
+            val create: JsonObject.(String) -> Unit
+        )
+
+        val inputs = listOf(
+            Input(
+                key = "int",
+                value = 42L,
+                create = { this[it] = 42 }
+            ),
+            Input(
+                key = "long",
+                value = 42L,
+                create = { this[it] = 42L }
+            ),
+            Input(
+                key = "float",
+                value = 42L,
+                create = { this[it] = 42.0F }
+            ),
+            Input(
+                key = "float_fraction",
+                value = 42L,
+                create = { this[it] = 42.9F }
+            ),
+            Input(
+                key = "double",
+                value = 42L,
+                create = { this[it] = 42.0 }
+            ),
+            Input(
+                key = "double_fraction",
+                value = 42L,
+                create = { this[it] = 42.9 }
+            ),
+            Input(
+                key = "bool_false",
+                value = null,
+                create = { this[it] = false }
+            ),
+            Input(
+                key = "bool_true",
+                value = null,
+                create = { this[it] = true }
+            ),
+            Input(
+                key = "string",
+                value = null,
+                create = { this[it] = "42" }
+            ),
+            Input(
+                key = "object",
+                value = null,
+                create = { this[it] = implementation.JsonObject() }
+            ),
+            Input(
+                key = "array",
+                value = null,
+                create = { this[it] = implementation.JsonArray() }
+            ),
+        )
+
+        for ((key, value, create) in inputs) {
+            val jsonObject = implementation.JsonObject()
+            val json = Json(jsonObject)
+            create.invoke(jsonObject, key)
+
+            assertEquals(value, json[key].long, "key:$key json:$jsonObject")
+        }
+    }
+
+    @Test
+    fun Json_longValue() {
+        data class Input(
+            val key: String,
+            val value: Long,
+            val create: JsonObject.(String) -> Unit
+        )
+
+        val inputs = listOf(
+            Input(
+                key = "int",
+                value = 42L,
+                create = { this[it] = 42 }
+            ),
+            Input(
+                key = "long",
+                value = 42L,
+                create = { this[it] = 42L }
+            ),
+            Input(
+                key = "float",
+                value = 42L,
+                create = { this[it] = 42.0F }
+            ),
+            Input(
+                key = "float_fraction",
+                value = 42L,
+                create = { this[it] = 42.9F }
+            ),
+            Input(
+                key = "double",
+                value = 42L,
+                create = { this[it] = 42.0 }
+            ),
+            Input(
+                key = "double_fraction",
+                value = 42L,
+                create = { this[it] = 42.9 }
+            ),
+            Input(
+                key = "string_int",
+                value = 43L,
+                create = { this[it] = "43" }
+            ),
+            Input(
+                key = "string_float",
+                value = 44L,
+                create = { this[it] = "44.9" }
+            ),
+            Input(
+                key = "bool_false",
+                value = 0L,
+                create = { this[it] = false }
+            ),
+            Input(
+                key = "bool_true",
+                value = 0L,
+                create = { this[it] = true }
+            ),
+            Input(
+                key = "object",
+                value = 0L,
+                create = { this[it] = implementation.JsonObject() }
+            ),
+            Input(
+                key = "array",
+                value = 0L,
+                create = { this[it] = implementation.JsonArray() }
+            ),
+            Input(
+                key = "null",
+                value = 0L,
+                create = { this[it] = JsonNull }
+            ),
+        )
+
+        for ((key, value, create) in inputs) {
+            val jsonObject = implementation.JsonObject()
+            val json = Json(jsonObject)
+            create.invoke(jsonObject, key)
+
+            assertEquals(value, json[key].longValue, "key:$key json:$jsonObject")
+        }
+    }
 }
