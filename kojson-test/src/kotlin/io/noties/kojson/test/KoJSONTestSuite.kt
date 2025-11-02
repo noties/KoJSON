@@ -10,6 +10,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @Suppress("TestFunctionName")
@@ -1849,6 +1850,131 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
             create.invoke(jsonObject, key)
 
             assertEquals(value, json[key].stringValue, "key:$key json:$jsonObject")
+        }
+    }
+
+    @Test
+    fun Json_array() {
+        data class Input(
+            val key: String,
+            val expectedValues: List<String>?,
+            val create: JsonObject.(String) -> Unit
+        )
+
+        val inputs = listOf(
+            Input(
+                key = "array",
+                expectedValues = listOf("one", "two"),
+                create = {
+                    val array = implementation.JsonArray().apply {
+                        add(implementation.JsonPrimitive("one"))
+                        add(implementation.JsonPrimitive("two"))
+                    }
+                    this[it] = array
+                }
+            ),
+            Input(
+                key = "empty_array",
+                expectedValues = emptyList(),
+                create = {
+                    val array = implementation.JsonArray()
+                    this[it] = array
+                }
+            ),
+            Input(
+                key = "int",
+                expectedValues = null,
+                create = { this[it] = 42 }
+            ),
+            Input(
+                key = "bool",
+                expectedValues = null,
+                create = { this[it] = true }
+            ),
+            Input(
+                key = "object",
+                expectedValues = null,
+                create = { this[it] = implementation.JsonObject() }
+            ),
+            Input(
+                key = "null",
+                expectedValues = null,
+                create = { this[it] = JsonNull }
+            ),
+        )
+
+        for ((key, expectedValues, create) in inputs) {
+            val jsonObject = implementation.JsonObject()
+            val json = Json(jsonObject)
+            create.invoke(jsonObject, key)
+
+            val actual = json[key].array
+            if (expectedValues == null) {
+                assertEquals(null, actual, "key:$key json:$jsonObject")
+            } else {
+                assertNotNull(actual, "key:$key json:$jsonObject")
+                assertEquals(expectedValues, actual.map { it.stringValue }, "key:$key json:$jsonObject")
+            }
+        }
+    }
+
+    @Test
+    fun Json_arrayValue() {
+        data class Input(
+            val key: String,
+            val expectedValues: List<String>,
+            val create: JsonObject.(String) -> Unit
+        )
+
+        val inputs = listOf(
+            Input(
+                key = "array",
+                expectedValues = listOf("one", "two"),
+                create = {
+                    val array = implementation.JsonArray().apply {
+                        add(implementation.JsonPrimitive("one"))
+                        add(implementation.JsonPrimitive("two"))
+                    }
+                    this[it] = array
+                }
+            ),
+            Input(
+                key = "empty_array",
+                expectedValues = emptyList(),
+                create = {
+                    val array = implementation.JsonArray()
+                    this[it] = array
+                }
+            ),
+            Input(
+                key = "int",
+                expectedValues = emptyList(),
+                create = { this[it] = 42 }
+            ),
+            Input(
+                key = "bool",
+                expectedValues = emptyList(),
+                create = { this[it] = false }
+            ),
+            Input(
+                key = "object",
+                expectedValues = emptyList(),
+                create = { this[it] = implementation.JsonObject() }
+            ),
+            Input(
+                key = "null",
+                expectedValues = emptyList(),
+                create = { this[it] = JsonNull }
+            ),
+        )
+
+        for ((key, expectedValues, create) in inputs) {
+            val jsonObject = implementation.JsonObject()
+            val json = Json(jsonObject)
+            create.invoke(jsonObject, key)
+
+            val actual = json[key].arrayValue
+            assertEquals(expectedValues, actual.map { it.stringValue }, "key:$key json:$jsonObject")
         }
     }
 }
