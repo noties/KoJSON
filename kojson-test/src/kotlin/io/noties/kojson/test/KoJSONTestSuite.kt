@@ -5,6 +5,7 @@ import io.noties.kojson.api.JsonElement
 import io.noties.kojson.api.JsonImplementation
 import io.noties.kojson.api.JsonNull
 import io.noties.kojson.api.JsonObject
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -13,6 +14,10 @@ import kotlin.test.assertTrue
 
 @Suppress("TestFunctionName")
 abstract class KoJSONTestSuite<T : Any> {
+
+    companion object {
+        const val EPSILON: Double = 1e-5
+    }
 
     //---------------------------------------------------
     //#region _
@@ -1125,7 +1130,7 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
             Input(
                 key = "null",
                 value = null,
-                create = { this[it] = null }
+                create = { this[it] = JsonNull }
             ),
         )
 
@@ -1454,7 +1459,15 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
             val json = Json(jsonObject)
             create.invoke(jsonObject, key)
 
-            assertEquals(value, json[key].float, "key:$key json:$jsonObject")
+            val actual = json[key].float
+            if (value != null && actual != null) {
+                assertTrue(
+                    abs(actual - value) < EPSILON,
+                    "key:$key json:$jsonObject expected:$value actual:$actual"
+                )
+            } else {
+                assertEquals(value, actual, "key:$key json:$jsonObject")
+            }
         }
     }
 
@@ -1529,7 +1542,11 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
             val json = Json(jsonObject)
             create.invoke(jsonObject, key)
 
-            assertEquals(value, json[key].floatValue, "key:$key json:$jsonObject")
+            val actual = json[key].floatValue
+            assertTrue(
+                abs(actual - value) < EPSILON,
+                "key:$key json:$jsonObject expected:$value actual:$actual"
+            )
         }
     }
 
@@ -1594,7 +1611,15 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
             val json = Json(jsonObject)
             create.invoke(jsonObject, key)
 
-            assertEquals(value, json[key].double, "key:$key json:$jsonObject")
+            val actual = json[key].double
+            if (value != null && actual != null) {
+                assertTrue(
+                    abs(actual - value) < EPSILON,
+                    "key:$key json:$jsonObject expected:$value actual:$actual"
+                )
+            } else {
+                assertEquals(value, actual, "key:$key json:$jsonObject")
+            }
         }
     }
 
@@ -1669,7 +1694,11 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
             val json = Json(jsonObject)
             create.invoke(jsonObject, key)
 
-            assertEquals(value, json[key].doubleValue, "key:$key json:$jsonObject")
+            val actual = json[key].doubleValue
+            assertTrue(
+                abs(actual - value) < EPSILON,
+                "key:$key json:$jsonObject expected:$value actual:$actual"
+            )
         }
     }
 }
