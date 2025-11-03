@@ -7,6 +7,7 @@ import io.noties.kojson.api.JsonImplementation
 import io.noties.kojson.api.JsonNull
 import io.noties.kojson.api.JsonObject
 import io.noties.kojson.api.JsonPrimitive
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.double
@@ -37,6 +38,15 @@ public val JsonElement.kson: KsonElement
     get() = JsonImplementationKotlinxSerialization.unwrap(this)
 
 internal object JsonImplementationKotlinxSerialization : JsonImplementation<KsonElement>() {
+
+    @OptIn(ExperimentalSerializationApi::class)
+    private val json: kotlinx.serialization.json.Json by lazy(mode = LazyThreadSafetyMode.SYNCHRONIZED) {
+        kotlinx.serialization.json.Json {
+            allowComments = true
+            allowTrailingComma = true
+            isLenient = true
+        }
+    }
 
     override fun JsonObject(): JsonObject = KsonObjectImpl()
 
@@ -73,6 +83,20 @@ internal object JsonImplementationKotlinxSerialization : JsonImplementation<Kson
             JsonNull -> KsonNull
             is JsonPrimitive -> (element as KsonPrimitiveImpl).jsonPrimitive
         }
+    }
+
+    override fun parse(json: String): JsonElement? {
+        return try {
+            this.json.parseToJsonElement(json)
+                .let { of(it) }
+        } catch (t: Throwable) {
+            t.printStackTrace()
+            null
+        }
+    }
+
+    override fun toJsonString(element: JsonElement): String {
+        return json.encodeToString(unwrap(element))
     }
 }
 

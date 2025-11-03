@@ -5,7 +5,7 @@ import kotlin.math.abs
 // Note: numbers do not handle the overflows. This is done for simplicity. Normally, json should
 //  contain relatively small numbers. If some really big numbers should be used
 //  (say - greater than Int.MAX_VALUE), then it is better to send those numbers as strings and
-//  parse them explicitly.
+//  parse them explicitly in code instead of relying on the JSON spec
 public class Json(
     public val element: JsonElement?
 ) {

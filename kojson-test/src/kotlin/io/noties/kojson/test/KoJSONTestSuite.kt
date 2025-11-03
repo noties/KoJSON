@@ -11,14 +11,15 @@ import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNull
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @Suppress("TestFunctionName")
 abstract class KoJSONTestSuite<T : Any> {
 
     companion object {
+        // not very small value due to the Float checks (reduced precision)
         const val EPSILON: Double = 1e-5
     }
 
@@ -33,11 +34,7 @@ abstract class KoJSONTestSuite<T : Any> {
 //        println("HELLO FROM BEFORE SUITE:" + System.nanoTime())
 //    }
 
-    protected abstract fun createFactory(): JsonNativeFactory<T>
     protected abstract fun createImplementation(): JsonImplementation<T>
-
-    @Suppress("MemberVisibilityCanBePrivate")
-    protected val factory: JsonNativeFactory<T> get() = createFactory()
 
     // as JsonImplementation should be stateless, we create it each time it is accessed,
     //  as it must not have any inner state
@@ -97,14 +94,14 @@ abstract class KoJSONTestSuite<T : Any> {
 //            assertTrue("so true") { false }
 //        }
 //    }
+//
+//    @Suppress("MemberVisibilityCanBePrivate")
+//    protected fun new(block: JsonImplementation<T>.() -> JsonElement): JsonElement {
+//        return block(implementation)
+//    }
 
-    @Suppress("MemberVisibilityCanBePrivate")
-    protected fun new(block: JsonImplementation<T>.() -> JsonElement): JsonElement {
-        return block(implementation)
-    }
-
-    @Suppress("MemberVisibilityCanBePrivate")
-    protected val SampleJson.json: Json get() = Json(new { of(factory.parse(rawJson)) })
+    @Suppress("MemberVisibilityCanBePrivate", "ComplexRedundantLet")
+    protected val SampleJson.json: Json get() = implementation.parse(rawJson)!!.let { Json(it) }
 
     //---------------------------------------------------
     //#endregion _
@@ -338,17 +335,16 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
     @Test
     fun Native_JsonPrimitive_isJsonPrimitive() {
         val data = listOf(
-            "false" to factory.primitive(false),
-            "0" to factory.primitive(0),
-            "1" to factory.primitive(1L),
-            "2F" to factory.primitive(2F),
-            "3_0" to factory.primitive(3.0),
-            "(empty-string)" to factory.primitive(""),
-            "\"hello json\"" to factory.primitive("hello json"),
+            "false" to implementation.JsonPrimitive(false),
+            "0" to implementation.JsonPrimitive(0),
+            "1" to implementation.JsonPrimitive(1L),
+            "2F" to implementation.JsonPrimitive(2F),
+            "3_0" to implementation.JsonPrimitive(3.0),
+            "(empty-string)" to implementation.JsonPrimitive(""),
+            "\"hello json\"" to implementation.JsonPrimitive("hello json"),
         )
 
-        for ((name, raw) in data) {
-            val element = new { of(raw) }
+        for ((name, element) in data) {
             assertTrue(element.isJsonPrimitive, name)
             assertFalse(element.isJsonObject, name)
             assertFalse(element.isJsonArray, name)
@@ -357,7 +353,7 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
 
     @Test
     fun Native_JsonObject_isJsonObject() {
-        val element = new { of(factory.`object`()) }
+        val element = implementation.JsonObject()
         assertFalse(element.isJsonPrimitive, "isJsonPrimitive=false")
         assertTrue(element.isJsonObject, "isJsonObject=true")
         assertFalse(element.isJsonArray, "isJsonArray=false")
@@ -367,8 +363,8 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
     fun Native_JsonObject_add() {
 
         fun run(block: (JsonObject) -> Unit) {
-            val element = new { of(factory.`object`()) }
-            block(element as JsonObject)
+            val element = implementation.JsonObject()
+            block(element)
         }
 
         data class Input(
@@ -389,7 +385,7 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
             Input(key = "key_bool", implementation.JsonPrimitive(true)),
             Input(key = "key_int", implementation.JsonPrimitive(42)),
             Input(key = "key_object", implementation.JsonObject()),
-            Input(key= "key_array", implementation.JsonArray())
+            Input(key = "key_array", implementation.JsonArray())
         )
 
         for ((key, el) in inputs) {
@@ -402,7 +398,7 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
 
     @Test
     fun Native_JsonArray_isJsonArray() {
-        val element = new { of(factory.array()) }
+        val element = implementation.JsonArray()
         assertFalse(element.isJsonPrimitive, "isJsonPrimitive=false")
         assertFalse(element.isJsonObject, "isJsonObject=false")
         assertTrue(element.isJsonArray, "isJsonArray=true")
@@ -410,14 +406,14 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
 
     @Test
     fun Native_JsonNull() {
-        val element = new { of(factory.`null`()) }
+        val element = implementation.JsonNull()
         assertFalse(element.isJsonPrimitive, "isJsonPrimitive=false")
         assertFalse(element.isJsonObject, "isJsonObject=false")
         assertFalse(element.isJsonArray, "isJsonArray=false")
 
         // singleton
-        assertEquals(element, io.noties.kojson.api.JsonNull)
-        assertTrue(element === io.noties.kojson.api.JsonNull)
+        assertEquals(element, JsonNull)
+        assertTrue(element === JsonNull)
     }
 
     //---------------------------------------------------

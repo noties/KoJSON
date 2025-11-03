@@ -1,5 +1,8 @@
 package io.noties.kojson.jvm.gson
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.Strictness
 import io.noties.kojson.api.Json
 import io.noties.kojson.api.JsonArray
 import io.noties.kojson.api.JsonElement
@@ -30,6 +33,13 @@ private val GsonNull: GsonNullJava get() = GsonNullJava.INSTANCE
 
 internal object JsonImplementationGson : JsonImplementation<GsonElement>() {
 
+    internal val gson: Gson by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        // not pretty, let it be _ugly_ compact
+        GsonBuilder()
+            .setStrictness(Strictness.LENIENT)
+            .create()
+    }
+
     override fun JsonObject(): JsonObject = GsonObjectImpl()
 
     override fun JsonArray(): JsonArray = GsonArrayImpl()
@@ -58,6 +68,21 @@ internal object JsonImplementationGson : JsonImplementation<GsonElement>() {
             is JsonObject -> (element as GsonObjectImpl).jsonObject
             is JsonPrimitive -> (element as GsonPrimitiveImpl).jsonPrimitive
         }
+    }
+
+    override fun parse(json: String): JsonElement? {
+        return try {
+            @Suppress("ComplexRedundantLet")
+            gson.fromJson(json, GsonElement::class.java)
+                .let { of(it) }
+        } catch (t: Throwable) {
+            t.printStackTrace()
+            null
+        }
+    }
+
+    override fun toJsonString(element: JsonElement): String {
+        return gson.toJson(unwrap(element))
     }
 }
 
