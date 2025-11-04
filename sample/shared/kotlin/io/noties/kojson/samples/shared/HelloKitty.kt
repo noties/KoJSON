@@ -1,0 +1,1 @@
+package io.noties.kojson.samples.shared
