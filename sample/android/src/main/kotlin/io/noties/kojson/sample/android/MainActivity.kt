@@ -7,6 +7,9 @@ import io.noties.kojson.kmp.serialization.kson
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 
+@TestCase(
+    title = ""
+)
 class MainActivity: Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

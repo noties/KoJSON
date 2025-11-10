@@ -3,6 +3,7 @@ package io.noties.kojson.sample.jvm
 import io.noties.kojson.api.Json
 
 object JsonSample {
+
     data class MyDataClass(
         val id: String,
         val name: String,
@@ -62,6 +63,19 @@ object JsonSample {
                     //  it would return empty string
                     description = json["description"].stringValue.takeIf { it.isNotEmpty() }
                 )
+            }
+
+            fun createJson() {
+                data class SomeObject(val id: String, val name: String)
+                val instance = SomeObject(id = "1234", name = "235678")
+
+                val json = Json.implementation.JsonObject()
+                json.addProperty("", "")
+                json["id"] = "4356732rbnv"
+
+                json
+                    .set("id", instance.id)
+                    .set("name", instance.name)
             }
         }
     }

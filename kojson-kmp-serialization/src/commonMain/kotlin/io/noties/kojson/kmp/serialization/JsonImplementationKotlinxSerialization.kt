@@ -167,9 +167,6 @@ internal class KsonObjectImpl(
         })
     }
 
-    override val asJsonObject: JsonObject
-        get() = this
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false
@@ -225,9 +222,6 @@ internal class KsonArrayImpl(
             add(value)
         })
     }
-
-    override val asJsonArray: JsonArray
-        get() = this
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -309,9 +303,6 @@ internal class KsonPrimitiveImpl(
 
     override val asString: String
         get() = jsonPrimitive.content
-
-    override val asJsonPrimitive: JsonPrimitive
-        get() = this
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

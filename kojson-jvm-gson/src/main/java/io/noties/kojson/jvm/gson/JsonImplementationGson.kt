@@ -140,9 +140,6 @@ internal class GsonObjectImpl(
         jsonObject.addProperty(key, value)
     }
 
-    override val asJsonObject: JsonObject
-        get() = this
-
     override fun toString(): String {
         return "JsonObject($jsonObject)"
     }
@@ -183,9 +180,6 @@ internal class GsonArrayImpl(
         val gson = jsonArray.remove(index)
         return JsonImplementationGson.of(gson)
     }
-
-    override val asJsonArray: JsonArray
-        get() = this
 
     override fun toString(): String {
         return "JsonArray($jsonArray)"
@@ -242,9 +236,6 @@ internal class GsonPrimitiveImpl(
 
     override val asString: String
         get() = jsonPrimitive.asString
-
-    override val asJsonPrimitive: JsonPrimitive
-        get() = this
 
     override fun toString(): String {
         return "JsonPrimitive($jsonPrimitive)"

@@ -14,6 +14,12 @@ kotlin {
     }
 }
 
+sourceSets {
+    main {
+        java.srcDirs(projectDir.resolve("../shared/kotlin/"))
+    }
+}
+
 dependencies {
     implementation(project(":kojson-jvm-gson"))
 }

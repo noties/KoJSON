@@ -24,6 +24,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
+    sourceSets["main"].java.srcDirs(projectDir.resolve("../shared/kotlin"))
+
     kotlinOptions {
         jvmTarget = "11"
     }
