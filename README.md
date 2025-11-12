@@ -169,6 +169,7 @@ val itemsAsSampleItems: List<SampleItem> = items
   }
 ```
 
-## License
 
-KoJSON is distributed under the [MIT License](https://opensource.org/licenses/MIT).
+## See also
+
+The project was inspired by great [SwiftyJSON](https://github.com/SwiftyJSON/SwiftyJSON) library
