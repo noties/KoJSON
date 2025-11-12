@@ -1,6 +1,8 @@
 package io.noties.kojson.sample.jvm
 
 import io.noties.kojson.api.Json
+import io.noties.kojson.api.JsonElement
+import io.noties.kojson.jvm.gson.new
 
 object JsonSample {
 
@@ -67,16 +69,19 @@ object JsonSample {
 
             fun createJson() {
                 data class SomeObject(val id: String, val name: String)
+
                 val instance = SomeObject(id = "1234", name = "235678")
 
-                val json = Json.implementation.JsonObject()
+                val json = JsonElement.new { JsonObject() }
                 json.addProperty("", "")
                 json["id"] = "4356732rbnv"
 
-                json
-                    .set("id", instance.id)
-                    .set("name", instance.name)
+//                json
+//                    .set("id", instance.id)
+//                    .set("name", instance.name)
             }
+
+
         }
     }
 }

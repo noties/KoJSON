@@ -6,6 +6,7 @@ import com.google.gson.Strictness
 import io.noties.kojson.api.Json
 import io.noties.kojson.api.JsonArray
 import io.noties.kojson.api.JsonElement
+import io.noties.kojson.api.JsonFactory
 import io.noties.kojson.api.JsonImplementation
 import io.noties.kojson.api.JsonNull
 import io.noties.kojson.api.JsonObject
@@ -22,19 +23,47 @@ public val GsonElement.json: Json get() = Json(JsonImplementationGson.of(this))
 @Suppress("SpellCheckingInspection")
 public val GsonElement.kojson: Json get() = json
 
-// this is a little weird, because it falls back to JsonNull, which might be confusing
-//  as there is difference between java-null and json-null, so if a thing is absent it should
-//  be undefined, like java-null, but if it is `null` in json, it should be json-null
-//public val Json.gson: GsonElement get() = JsonImplementationGson.unwrap(element ?: JsonNull)
+/**
+ * Returns `null` if there is no backend `element`. Otherwise, this element is returned,
+ * even if it is `json-null`
+ */
+public val Json.gson: GsonElement? get() = element?.let { JsonImplementationGson.unwrap(element = it) }
 
 public val JsonElement.gson: GsonElement get() = JsonImplementationGson.unwrap(this)
+
+
+/**
+ * Expose constructor via specific to this implementation import
+ * ```kotlin
+ * val jsonObject          = JsonElement.new { JsonObject() }
+ *
+ * val jsonArray           = JsonElement.new { JsonArray() }
+ *
+ * val jsonPrimitiveBool   = JsonElement.new { JsonPrimitive(true) }
+ * val jsonPrimitiveInt    = JsonElement.new { JsonPrimitive(42) }
+ * val jsonPrimitiveLong   = JsonElement.new { JsonPrimitive(742L) }
+ * val jsonPrimitiveFloat  = JsonElement.new { JsonPrimitive(5742.1F) }
+ * val jsonPrimitiveDouble = JsonElement.new { JsonPrimitive(95742.19) }
+ * val jsonPrimitiveString = JsonElement.new { JsonPrimitive("yes-1095742.19") }
+ *
+ * val jsonNull            = JsonElement.new { JsonNull() }
+ * ```
+ */
+public fun <T : JsonElement> JsonElement.Companion.new(factory: JsonFactory.() -> T): T {
+    return factory(JsonImplementationGson)
+}
+
+public fun Json.Companion.parse(string: String): Json {
+    val element = JsonImplementationGson.parse(json = string)
+    return Json(element)
+}
 
 private val GsonNull: GsonNullJava get() = GsonNullJava.INSTANCE
 
 internal object JsonImplementationGson : JsonImplementation<GsonElement>() {
 
     internal val gson: Gson by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
-        // not pretty, let it be _ugly_ compact
+        // not pretty, let it be _ugly_ and compact
         GsonBuilder()
             .setStrictness(Strictness.LENIENT)
             .create()
@@ -71,14 +100,8 @@ internal object JsonImplementationGson : JsonImplementation<GsonElement>() {
     }
 
     override fun parse(json: String): JsonElement? {
-        return try {
-            @Suppress("ComplexRedundantLet")
-            gson.fromJson(json, GsonElement::class.java)
-                .let { of(it) }
-        } catch (t: Throwable) {
-            t.printStackTrace()
-            null
-        }
+        return gson.fromJson(json, GsonElement::class.java)
+            ?.let { of(it) }
     }
 
     override fun toJsonString(element: JsonElement): String {
@@ -141,7 +164,7 @@ internal class GsonObjectImpl(
     }
 
     override fun toString(): String {
-        return "JsonObject($jsonObject)"
+        return jsonObject.toString()
     }
 
     override fun equals(other: Any?): Boolean {
@@ -182,7 +205,7 @@ internal class GsonArrayImpl(
     }
 
     override fun toString(): String {
-        return "JsonArray($jsonArray)"
+        return jsonArray.toString()
     }
 
     override fun equals(other: Any?): Boolean {
@@ -238,7 +261,7 @@ internal class GsonPrimitiveImpl(
         get() = jsonPrimitive.asString
 
     override fun toString(): String {
-        return "JsonPrimitive($jsonPrimitive)"
+        return jsonPrimitive.toString()
     }
 
     override fun equals(other: Any?): Boolean {

@@ -3,6 +3,7 @@ package io.noties.kojson.kmp.serialization
 import io.noties.kojson.api.Json
 import io.noties.kojson.api.JsonArray
 import io.noties.kojson.api.JsonElement
+import io.noties.kojson.api.JsonFactory
 import io.noties.kojson.api.JsonImplementation
 import io.noties.kojson.api.JsonNull
 import io.noties.kojson.api.JsonObject
@@ -36,6 +37,33 @@ public val Json.kson: KsonElement
 @Suppress("SpellCheckingInspection")
 public val JsonElement.kson: KsonElement
     get() = JsonImplementationKotlinxSerialization.unwrap(this)
+
+
+/**
+ * Expose constructor via specific to this implementation import
+ * ```kotlin
+ * val jsonObject          = JsonElement.new { JsonObject() }
+ *
+ * val jsonArray           = JsonElement.new { JsonArray() }
+ *
+ * val jsonPrimitiveBool   = JsonElement.new { JsonPrimitive(true) }
+ * val jsonPrimitiveInt    = JsonElement.new { JsonPrimitive(42) }
+ * val jsonPrimitiveLong   = JsonElement.new { JsonPrimitive(742L) }
+ * val jsonPrimitiveFloat  = JsonElement.new { JsonPrimitive(5742.1F) }
+ * val jsonPrimitiveDouble = JsonElement.new { JsonPrimitive(95742.19) }
+ * val jsonPrimitiveString = JsonElement.new { JsonPrimitive("yes-1095742.19") }
+ *
+ * val jsonNull            = JsonElement.new { JsonNull() }
+ * ```
+ */
+public fun <T: JsonElement> JsonElement.Companion.new(factory: JsonFactory.() -> T): T {
+    return factory(JsonImplementationKotlinxSerialization)
+}
+
+public fun Json.Companion.parse(string: String): Json {
+    val element = JsonImplementationKotlinxSerialization.parse(string)
+    return Json(element)
+}
 
 internal object JsonImplementationKotlinxSerialization : JsonImplementation<KsonElement>() {
 
@@ -179,6 +207,10 @@ internal class KsonObjectImpl(
     override fun hashCode(): Int {
         return jsonObject.hashCode()
     }
+
+    override fun toString(): String {
+        return jsonObject.toString()
+    }
 }
 
 internal class KsonArrayImpl(
@@ -235,6 +267,10 @@ internal class KsonArrayImpl(
     override fun hashCode(): Int {
         return jsonArray.hashCode()
     }
+
+    override fun toString(): String {
+        return jsonArray.toString()
+    }
 }
 
 internal class KsonPrimitiveImpl(
@@ -248,7 +284,7 @@ internal class KsonPrimitiveImpl(
     constructor(value: String) : this(KsonPrimitive(value))
 
     // Interesting (not). `"true"` (string) is parsed as boolean
-    //  How (not) to implement strict type type system (primitive is backed by string property)
+    //  How (not) to implement strict type system (primitive is backed by string property)
     override val isBoolean: Boolean
         /**
          * We do not want `"true"` to be returned here as boolean, as it is not - it is string!
@@ -257,7 +293,7 @@ internal class KsonPrimitiveImpl(
         get() = if (jsonPrimitive.isString) false else jsonPrimitive.booleanOrNull != null
 
     /**
-     * It seems that this condition needs to met these requirements:
+     * It seems that this condition needs to meet these requirements:
      * - if something can be parsed as long or double, it can be a number.
      * - but also, BUT MUST NOT BE STRING. If we do not check that then
      *   a string `"43"` will be incorrectly labeled as `isNumber=true`
@@ -275,7 +311,7 @@ internal class KsonPrimitiveImpl(
     /**
      * As int should not throw if it is JsonPrimitive.Number, because json does not specify
      * this directly, thus all possible numbers are represented by a single type. Most of
-     * other json parsers follow the same rule, this code aligns with them.
+     * the other json parsers follow the same rule, this code aligns with them.
      */
     override val asInt: Int
         get() = try {
@@ -315,5 +351,9 @@ internal class KsonPrimitiveImpl(
 
     override fun hashCode(): Int {
         return jsonPrimitive.hashCode()
+    }
+
+    override fun toString(): String {
+        return jsonPrimitive.toString()
     }
 }

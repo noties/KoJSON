@@ -45,7 +45,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":kojson-api"))
-            implementation(libs.kotlinx.serialization)
+            api(libs.kotlinx.serialization)
         }
 //
 //        jvmMain {

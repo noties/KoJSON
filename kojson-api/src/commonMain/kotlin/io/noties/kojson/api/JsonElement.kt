@@ -1,6 +1,7 @@
 package io.noties.kojson.api
 
 public sealed interface JsonElement {
+    public companion object;
 
     // to postpone checks, to move to runtime, so those are not parsed/initialized for each property
     //  before it is actually being used, which will impact parsing time
@@ -17,6 +18,10 @@ public sealed interface JsonElement {
     public val asJsonArray: JsonArray get() = error("Not a JsonArray:$this")
     public val asJsonPrimitive: JsonPrimitive get() = error("Not a JsonPrimitive:$this")
     public val asJsonNull: JsonNull get() = error("Not a JsonNull:$this")
+
+    public override fun equals(other: Any?): Boolean
+    public override fun hashCode(): Int
+    public override fun toString(): String
 }
 
 /**
@@ -36,6 +41,10 @@ public data object JsonNull : JsonElement {
         get() = true
     public override val asJsonNull: JsonNull
         get() = this
+
+    override fun toString(): String {
+        return "null"
+    }
 }
 
 public interface JsonObject : JsonElement {
@@ -65,16 +74,13 @@ public interface JsonObject : JsonElement {
     public fun addProperty(key: String, value: Double)
     public fun addProperty(key: String, value: String)
 
-    public operator fun set(key: String, value: Boolean): JsonObject = this.also { addProperty(key, value) }
-    public operator fun set(key: String, value: Int): JsonObject = this.also { addProperty(key, value) }
-    public operator fun set(key: String, value: Long): JsonObject = this.also { addProperty(key, value) }
-    public operator fun set(key: String, value: Float): JsonObject = this.also { addProperty(key, value) }
-    public operator fun set(key: String, value: Double): JsonObject = this.also { addProperty(key, value) }
-    public operator fun set(key: String, value: String): JsonObject = this.also { addProperty(key, value) }
-    public operator fun set(key: String, value: JsonElement?): JsonObject = this.also { add(key, value) }
-
-    // TODO: check this
-//    public operator fun JsonObject.set(key: String, value: JsonObject.() -> Unit): Unit
+    public operator fun set(key: String, value: Boolean): Unit = addProperty(key, value)
+    public operator fun set(key: String, value: Int): Unit = addProperty(key, value)
+    public operator fun set(key: String, value: Long): Unit = addProperty(key, value)
+    public operator fun set(key: String, value: Float): Unit = addProperty(key, value)
+    public operator fun set(key: String, value: Double): Unit = addProperty(key, value)
+    public operator fun set(key: String, value: String): Unit = addProperty(key, value)
+    public operator fun set(key: String, value: JsonElement?): Unit = add(key, value)
 }
 
 public interface JsonArray : JsonElement, Sequence<JsonElement> {

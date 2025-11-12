@@ -22,4 +22,7 @@ sourceSets {
 
 dependencies {
     implementation(project(":kojson-jvm-gson"))
+
+    implementation(project(":kojson-kmp-serialization"))
+//    implementation(libs.kotlinx.serialization)
 }

@@ -19,6 +19,8 @@ public abstract class JsonImplementation<T : Any> : JsonFactory {
      * For a more controlled version, parsing should be done by clients
      * according to the business rules and then converted to [JsonElement]
      * to be consumed further.
+     *
+     * @rethrows parsing exception
      */
     public abstract fun parse(json: String): JsonElement?
 

@@ -2,6 +2,7 @@ package io.noties.kojson.test
 
 import io.noties.kojson.api.Json
 import io.noties.kojson.api.JsonElement
+import io.noties.kojson.api.JsonFactory
 import io.noties.kojson.api.JsonImplementation
 import io.noties.kojson.api.JsonNull
 import io.noties.kojson.api.JsonObject
@@ -34,7 +35,25 @@ abstract class KoJSONTestSuite<T : Any> {
 //        println("HELLO FROM BEFORE SUITE:" + System.nanoTime())
 //    }
 
+
+    // there must be at least some amount of trust :)
+    interface JsonRequiredExtensions {
+
+        fun <T : JsonElement> JsonElement_Companion_new(factory: JsonFactory.() -> T): T
+
+        /**
+         * Sad. Kotlin-doc does not support `@inheritDoc`, which is useful in some situations.
+         * [discussion](https://discuss.kotlinlang.org/t/ktdoc-dokka-inheritdoc/4965/3)
+         *
+         * @rethrows
+         * @inheritDoc
+         */
+        fun Json_Companion_parse(string: String): Json
+    }
+
     protected abstract fun createImplementation(): JsonImplementation<T>
+
+    protected abstract fun createJsonRequiredExtensions(): JsonRequiredExtensions
 
     // as JsonImplementation should be stateless, we create it each time it is accessed,
     //  as it must not have any inner state
@@ -2256,6 +2275,210 @@ ${keys.joinToString(separator = ",\n") { "\"${it}\": null" }}
             expected.zip(actual).forEachIndexed { index, (exp, act) ->
                 assertEquals(exp, act, "key:$key index:$index json:$jsonObject")
             }
+        }
+    }
+
+    @Test
+    fun JsonImplementation_native() {
+        val elements = listOf(
+            implementation.JsonNull(),
+            implementation.JsonObject(),
+            implementation.JsonArray(),
+            implementation.JsonPrimitive(42),
+            implementation.JsonPrimitive(421L),
+            implementation.JsonPrimitive(42.1F),
+            implementation.JsonPrimitive(42.12),
+            implementation.JsonPrimitive(true),
+            implementation.JsonPrimitive("yes"),
+        )
+
+        for (element in elements) {
+            val native = implementation.unwrap(element)
+            val wrapped = implementation.of(native)
+            assertEquals(
+                expected = element,
+                actual = wrapped,
+                message = listOf(
+                    "element" to element,
+                    "native" to native,
+                    "wrapped" to wrapped
+                ).joinToString(separator = ", ") {
+                    "${it.first}:${it.second}"
+                }
+            )
+        }
+    }
+
+    @Test
+    fun JsonImplementation_parse() {
+        data class Input(
+            val json: String,
+            val expected: JsonElement
+        )
+
+        val inputs = listOf(
+            Input(
+                json = "null",
+                expected = implementation.JsonNull()
+            ),
+            Input(
+                json = "42",
+                expected = implementation.JsonPrimitive(42)
+            ),
+            // hm, will it work? we do not do any additional checks
+            //  so now it depends on the implementation
+            Input(
+                json = "421",
+                expected = implementation.JsonPrimitive(421L)
+            ),
+            Input(
+                json = "true",
+                expected = implementation.JsonPrimitive(true)
+            ),
+            // this fails for gson, as they internally convert to doubleValue,
+            //  which I assume looses some precision, which results in equals=false
+//            Input(
+//                json = "42.1",
+//                expected = implementation.JsonPrimitive(42.1F)
+//            ),
+            Input(
+                json = "42.12",
+                expected = implementation.JsonPrimitive(42.12)
+            ),
+            Input(
+                json = "\"a-string\"",
+                expected = implementation.JsonPrimitive("a-string")
+            ),
+            Input(
+                json = "[]",
+                expected = implementation.JsonArray()
+            ),
+            Input(
+                json = "[1, true, \"no\", null, {}]",
+                expected = implementation.JsonArray().also {
+                    it.add(implementation.JsonPrimitive(1))
+                    it.add(implementation.JsonPrimitive(true))
+                    it.add(implementation.JsonPrimitive("no"))
+                    it.add(implementation.JsonNull())
+                    it.add(implementation.JsonObject())
+                }
+            ),
+            Input(
+                json = "{}",
+                expected = implementation.JsonObject()
+            ),
+            Input(
+                json = "{ \"key\": 1 }",
+                expected = implementation.JsonObject().also {
+                    it.addProperty("key", 1)
+                }
+            )
+        )
+
+        for ((json, expected) in inputs) {
+            val element = implementation.parse(json)
+            assertEquals(expected, element, json)
+        }
+    }
+
+    @Test
+    fun JsonRequiredExtensions_new() {
+        // check results match
+
+        val implementation = implementation
+        val jre = createJsonRequiredExtensions()
+
+        val inputs = listOf<JsonFactory.() -> JsonElement>(
+            { JsonObject() },
+            { JsonArray() },
+            { JsonNull() },
+            { JsonPrimitive(42) },
+            { JsonPrimitive(421L) },
+            { JsonPrimitive(4212.7F) },
+            { JsonPrimitive(4212.79) },
+            { JsonPrimitive("4212.794") }
+        )
+
+        for (input in inputs) {
+            val native = input(implementation)
+            val extension = jre.JsonElement_Companion_new(factory = input)
+            assertEquals(native, extension, input(implementation).toString())
+        }
+    }
+
+    @Test
+    fun JsomRequiredExtensions_parse() {
+        val implementation = this.implementation
+        val jsonRequiredExtensions = this.createJsonRequiredExtensions()
+
+        data class Input(
+            val element: JsonElement,
+            val json: String
+        )
+
+        val inputs = listOf(
+            Input(
+                element = implementation.JsonNull(),
+                json = "null"
+            ),
+            Input(
+                element = implementation.JsonPrimitive(true),
+                json = "true"
+            ),
+            Input(
+                element = implementation.JsonPrimitive(42L),
+                json = "42"
+            ),
+            Input(
+                element = implementation.JsonPrimitive(42.9),
+                json = "42.9"
+            ),
+            Input(
+                element = implementation.JsonPrimitive("hello"),
+                json = "\"hello\""
+            ),
+            Input(
+                element = implementation.JsonArray(),
+                json = "[]"
+            ),
+            Input(
+                element = implementation.JsonArray().also {
+                    it.add(implementation.JsonPrimitive(1))
+                    it.add(implementation.JsonPrimitive(true))
+                    it.add(implementation.JsonPrimitive("hey"))
+                    it.add(implementation.JsonArray())
+                },
+                json = "[1, true, \"hey\", []]"
+            ),
+            Input(
+                element = implementation.JsonObject(),
+                json = "{}"
+            ),
+            Input(
+                element = implementation.JsonObject().also {
+                    it.addProperty("int", 42)
+                    it.addProperty("bool", true)
+                    it.addProperty("string", "oops")
+                    it.add("nested", implementation.JsonObject())
+                },
+                json = listOf(
+                    "int" to "42",
+                    "bool" to "true",
+                    "string" to "\"oops\"",
+                    "nested" to "{}"
+                ).joinToString(
+                    separator = ",",
+                    prefix = "{",
+                    postfix = "}"
+                ) {
+                    "${it.first}:${it.second}"
+                }
+            )
+        )
+
+        for ((expected, jsonString) in inputs) {
+            val json = jsonRequiredExtensions.Json_Companion_parse(string = jsonString)
+            assertEquals(expected, json.element, jsonString)
         }
     }
 }

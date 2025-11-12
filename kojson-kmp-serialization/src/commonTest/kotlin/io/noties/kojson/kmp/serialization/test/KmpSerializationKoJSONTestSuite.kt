@@ -11,6 +11,10 @@ class KmpSerializationKoJSONTestSuite: KoJSONTestSuite<JsonElement>() {
     override fun createImplementation(): JsonImplementation<JsonElement> {
         return JsonImplementationKotlinxSerialization
     }
+
+    override fun createJsonRequiredExtensions(): JsonRequiredExtensions {
+        return KotlinSerializationRequiredExtensions()
+    }
 }
 
 // HAD to copy here, because IDE does not see those classes :'(

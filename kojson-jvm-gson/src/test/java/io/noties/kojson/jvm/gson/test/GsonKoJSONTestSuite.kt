@@ -9,4 +9,8 @@ class GsonKoJSONTestSuite : KoJSONTestSuite<JsonElement>() {
     override fun createImplementation(): JsonImplementation<JsonElement> {
         return JsonImplementationGson
     }
+
+    override fun createJsonRequiredExtensions(): JsonRequiredExtensions {
+        return GsonJsonRequiredExtensions()
+    }
 }

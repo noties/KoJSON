@@ -2,6 +2,9 @@ package io.noties.kojson.api
 
 import kotlin.math.abs
 
+// TODO: JsonElement toString in kotlinx.serialization
+// TODO: factories in kotlinx.s
+
 // Note: numbers do not handle the overflows. This is done for simplicity. Normally, json should
 //  contain relatively small numbers. If some really big numbers should be used
 //  (say - greater than Int.MAX_VALUE), then it is better to send those numbers as strings and
@@ -10,37 +13,7 @@ public class Json(
     public val element: JsonElement?
 ) {
 
-    public companion object {
-        /**ø
-         * Only as a convenience for a shortcut to call [new]. There is no restriction on
-         * the number of implementations.
-         */
-        public lateinit var implementation: JsonImplementation<*>
-
-        /**
-         * It might be tedious, but providing an implementation by default
-         * at this point seems a little complicated. It could have worked, if we would support
-         * only a single implementation (which is not the case, as we do not limit it in any way)
-         * and then providing some file with implementation class name (the Java way). But
-         * even that would not work with Kotlin MP, as they do not have support of bundling files.
-         *
-         * Suggested workaround is to create a dedicated extension in the app code that would provide
-         * automatically desired implementation. Or just set it the [implementation] property
-         * to be used as default.
-         *
-         * __NB__ this call will fail if no `implementation` is supplied and if
-         * `Companion.implementation` is not set.
-         *
-         * By default, does not require any arguments, and JsonObject is used as the default element
-         */
-        public fun new(
-            factory: JsonFactory = Companion.implementation,
-            block: JsonFactory.() -> JsonElement = { JsonObject() }
-        ): Json {
-            val element = block(factory)
-            return Json(element = element)
-        }
-    }
+    public companion object;
 
     /**
      * Strict boolean.
@@ -210,6 +183,23 @@ public class Json(
      * @see takeIfExistsNotNull
      */
     public fun existsNotNull(): Boolean = element != null && element != JsonNull
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as Json
+
+        return element == other.element
+    }
+
+    override fun hashCode(): Int {
+        return element?.hashCode() ?: 0
+    }
+
+    override fun toString(): String {
+        return element?.toString() ?: ""
+    }
 }
 
 /**

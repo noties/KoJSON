@@ -3,6 +3,7 @@ package io.noties.kojson.sample.shared.snippets
 import io.noties.kojson.api.Json
 import io.noties.kojson.api.JsonArray
 import io.noties.kojson.api.JsonElement
+import io.noties.kojson.api.JsonFactory
 import io.noties.kojson.api.JsonNull
 import io.noties.kojson.api.JsonObject
 import io.noties.kojson.api.JsonPrimitive
@@ -15,12 +16,9 @@ import io.noties.kojson.sample.shared.JsonSnippet
 
 /**
  * `Json` is a happy version of original JSON. It is optimistic and flexible.
- * Non intrusive and very allowing. Meanwhile preserving all the original
- * JSON to be inspected just in case.
+ * Meanwhile, also strict if needed to.
  *
- * Also, it is better to have value or null as 2 possible states.
- * Instead of introducing the 3rd one - undefined.
- *
+ * JSON input:
  * ```json
  * {
  *   "hello": "JayJay",
@@ -248,3 +246,29 @@ class Basic {
         val relaxedOrDefault: List<JsonElement?> = json.jsonArrayValue
     }
 }
+
+//object FactoryTest {
+//
+//    interface JsonObjectBuilder {
+//
+//    }
+//
+//    fun JsonObject(
+//        builder: JsonFactory.(JsonObject) -> Unit = {}
+//    ): JsonObject {
+//        TODO()
+//    }
+//
+//    fun hey() {
+//        val jo = JsonObject()
+//        val j2 = JsonObject {
+//            it["hello"] = 1
+//            it["again"] = true
+//            it["nested"] = JsonObject {
+//                it["hello"] = 42F
+//            }
+//            it["nested_array"] = JsonArray()
+//            it["hey"] = JsonNull
+//        }
+//    }
+//}

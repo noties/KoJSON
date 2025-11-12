@@ -1,6 +1,8 @@
 package io.noties.kojson.api
 
 public interface JsonFactory {
+    public companion object;
+
     public fun JsonObject(): JsonObject
 
     public fun JsonArray(): JsonArray
@@ -14,10 +16,4 @@ public interface JsonFactory {
 
     // for uniformity with other functions
     public fun JsonNull(): JsonNull = JsonNull
-
-    public fun new(
-        block: JsonFactory.() -> JsonElement
-    ): JsonElement {
-        return block(this)
-    }
 }
