@@ -22,6 +22,8 @@ kotlin {
     }
 
     androidTarget {
+        publishLibraryVariants("release")
+
         compilations.all {
             compileTaskProvider.configure {
                 compilerOptions {
@@ -75,6 +77,11 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
     }
 }
 
