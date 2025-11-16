@@ -1,4 +1,3 @@
-import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
@@ -39,13 +38,5 @@ dependencies {
 tasks.withType<Test>().configureEach {
     testLogging {
         events(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED)
-    }
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("release") {
-            from(components["java"])
-        }
     }
 }

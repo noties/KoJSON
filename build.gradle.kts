@@ -12,6 +12,7 @@ plugins {
     alias(libs.plugins.androidLibrary).apply(false)
     alias(libs.plugins.kotlinMultiplatform).apply(false)
     alias(libs.plugins.jetbrains.kotlin.jvm).apply(false)
+    alias(libs.plugins.vanniktechMavenPublish).apply(false)
 }
 
 data class ArtifactMetadata(
@@ -46,120 +47,121 @@ val artifactMetadata = mapOf(
     ),
 )
 
-val pomName = property("POM_NAME") as String
+//val pomName = property("POM_NAME") as String
 val pomDescription = property("POM_DESCRIPTION") as String
-val pomUrl = property("POM_URL") as String
-val pomInceptionYear = property("POM_INCEPTION_YEAR") as String
-val pomScmUrl = property("POM_SCM_URL") as String
-val pomScmConnection = property("POM_SCM_CONNECTION") as String
-val pomScmDevConnection = property("POM_SCM_DEV_CONNECTION") as String
-val pomLicenseName = property("POM_LICENSE_NAME") as String
-val pomLicenseUrl = property("POM_LICENSE_URL") as String
-val pomLicenseDist = property("POM_LICENSE_DIST") as String
-val pomDeveloperId = property("POM_DEVELOPER_ID") as String
-val pomDeveloperName = property("POM_DEVELOPER_NAME") as String
-val pomDeveloperEmail = property("POM_DEVELOPER_EMAIL") as String
+//val pomUrl = property("POM_URL") as String
+//val pomInceptionYear = property("POM_INCEPTION_YEAR") as String
+//val pomScmUrl = property("POM_SCM_URL") as String
+//val pomScmConnection = property("POM_SCM_CONNECTION") as String
+//val pomScmDevConnection = property("POM_SCM_DEV_CONNECTION") as String
+//val pomLicenseName = property("POM_LICENSE_NAME") as String
+//val pomLicenseUrl = property("POM_LICENSE_URL") as String
+//val pomLicenseDist = property("POM_LICENSE_DIST") as String
+//val pomDeveloperId = property("POM_DEVELOPER_ID") as String
+//val pomDeveloperName = property("POM_DEVELOPER_NAME") as String
+//val pomDeveloperEmail = property("POM_DEVELOPER_EMAIL") as String
 
 description = pomDescription
 
-val sonatypeUsername = propertyOrEnv("SONATYPE_USERNAME")
-val sonatypePassword = propertyOrEnv("SONATYPE_PASSWORD")
-val signingKeyId = propertyOrEnv("SIGNING_KEY_ID")
-val signingKey = propertyOrEnv("SIGNING_KEY")
-val signingPassword = propertyOrEnv("SIGNING_PASSWORD")
-
-val releaseRepositoryUrl = URI("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-val snapshotRepositoryUrl = URI("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-
-subprojects {
-    val metadata = artifactMetadata[name] ?: return@subprojects
-    description = metadata.description
-
-    pluginManager.apply("maven-publish")
-    pluginManager.apply("signing")
-
-    extensions.configure<PublishingExtension> {
-        publications.withType<MavenPublication>().configureEach {
-            pom {
-                name.set(metadata.displayName.ifBlank { pomName })
-                description.set(metadata.description.ifBlank { pomDescription })
-                url.set(pomUrl)
-                inceptionYear.set(pomInceptionYear)
-
-                licenses {
-                    license {
-                        name.set(pomLicenseName)
-                        url.set(pomLicenseUrl)
-                        distribution.set(pomLicenseDist)
-                    }
-                }
-                developers {
-                    developer {
-                        id.set(pomDeveloperId)
-                        name.set(pomDeveloperName)
-                        email.set(pomDeveloperEmail)
-                    }
-                }
-                scm {
-                    url.set(pomScmUrl)
-                    connection.set(pomScmConnection)
-                    developerConnection.set(pomScmDevConnection)
-                }
-            }
-        }
-
-        repositories {
-            // publish to local directory, zip and upload, f* gardle
-            maven {
-                url = (property("MAVEN_LOCAL_DIR") as String)
-                    .let { "file://$it" }
-                    .let { URI.create(it) }
-            }
-//            maven {
-////                name = "Sonatype"
-//                url = if (version.toString().endsWith("SNAPSHOT")) {
-//                    snapshotRepositoryUrl
-//                } else {
-//                    releaseRepositoryUrl
-//                }
+//val sonatypeUsername = propertyOrEnv("SONATYPE_USERNAME")
+//val sonatypePassword = propertyOrEnv("SONATYPE_PASSWORD")
+//val signingKeyId = propertyOrEnv("SIGNING_KEY_ID")
+//val signingKey = propertyOrEnv("SIGNING_KEY")
+//val signingPassword = propertyOrEnv("SIGNING_PASSWORD")
 //
-//                credentials(HttpHeaderCredentials::class) {
-//                    name = "Authorization"
-//                    value = "Bearer SFlJS0luOllKSXVnUVZ2YkRTN0FsdDF3NUlReHBaeDZERXZ3TlpNYQo="
-//                }
+//val releaseRepositoryUrl = URI("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+//val snapshotRepositoryUrl = URI("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+
+//subprojects {
+//    val metadata = artifactMetadata[name] ?: return@subprojects
+//    description = metadata.description
 //
-                  // "gradle" expects principal (what?!)
-                  //  I need a digital shotgun to kill this monster
-//                authentication {
-//                    create<HttpHeaderAuthentication>("header")
-//                }
+//    pluginManager.apply("maven-publish")
+//    pluginManager.apply("signing")
+//    pluginManager.apply("com.vanniktech.maven.publish")
 //
-////                if (sonatypeUsername != null && sonatypePassword != null) {
-////
-//////                    credentials {
-//////                        username = sonatypeUsername
-//////                        password = sonatypePassword
-//////                    }
-////                }
+//    extensions.configure<PublishingExtension> {
+//        publications.withType<MavenPublication>().configureEach {
+//            pom {
+//                name.set(metadata.displayName.ifBlank { pomName })
+//                description.set(metadata.description.ifBlank { pomDescription })
+//                url.set(pomUrl)
+//                inceptionYear.set(pomInceptionYear)
+//
+//                licenses {
+//                    license {
+//                        name.set(pomLicenseName)
+//                        url.set(pomLicenseUrl)
+//                        distribution.set(pomLicenseDist)
+//                    }
+//                }
+//                developers {
+//                    developer {
+//                        id.set(pomDeveloperId)
+//                        name.set(pomDeveloperName)
+//                        email.set(pomDeveloperEmail)
+//                    }
+//                }
+//                scm {
+//                    url.set(pomScmUrl)
+//                    connection.set(pomScmConnection)
+//                    developerConnection.set(pomScmDevConnection)
+//                }
 //            }
-        }
-    }
+//        }
+//
+//        repositories {
+//            // publish to local directory, zip and upload, f* gardle
+//            maven {
+//                url = (property("MAVEN_LOCAL_DIR") as String)
+//                    .let { "file://$it" }
+//                    .let { URI.create(it) }
+//            }
+////            maven {
+//////                name = "Sonatype"
+////                url = if (version.toString().endsWith("SNAPSHOT")) {
+////                    snapshotRepositoryUrl
+////                } else {
+////                    releaseRepositoryUrl
+////                }
+////
+////                credentials(HttpHeaderCredentials::class) {
+////                    name = "Authorization"
+////                    value = "Bearer SFlJS0luOllKSXVnUVZ2YkRTN0FsdDF3NUlReHBaeDZERXZ3TlpNYQo="
+////                }
+////
+//                  // "gradle" expects principal (what?!)
+//                  //  I need a digital shotgun to kill this monster
+////                authentication {
+////                    create<HttpHeaderAuthentication>("header")
+////                }
+////
+//////                if (sonatypeUsername != null && sonatypePassword != null) {
+//////
+////////                    credentials {
+////////                        username = sonatypeUsername
+////////                        password = sonatypePassword
+////////                    }
+//////                }
+////            }
+//        }
+//    }
+//
+//    extensions.configure<SigningExtension> {
+//        val publishing = extensions.getByType<PublishingExtension>()
+//        isRequired = !version.toString().endsWith("SNAPSHOT")
+//
+//        if (!signingKey.isNullOrBlank()) {
+//            useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
+//            sign(publishing.publications)
+//        }
+//    }
+//}
 
-    extensions.configure<SigningExtension> {
-        val publishing = extensions.getByType<PublishingExtension>()
-        isRequired = !version.toString().endsWith("SNAPSHOT")
-
-        if (!signingKey.isNullOrBlank()) {
-            useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
-            sign(publishing.publications)
-        }
-    }
-}
-
-tasks.register("publishKojsonToMaven") {
-    dependsOn(
-        ":kojson-api:publishAllPublicationsToMavenRepository",
-        ":kojson-kmp-serialization:publishAllPublicationsToMavenRepository",
-        ":kojson-jvm-gson:publishReleasePublicationToMavenRepository",
-    )
-}
+//tasks.register("publishKojsonToMaven") {
+//    dependsOn(
+//        ":kojson-api:publishAllPublicationsToMavenRepository",
+//        ":kojson-kmp-serialization:publishAllPublicationsToMavenRepository",
+//        ":kojson-jvm-gson:publishReleasePublicationToMavenRepository",
+//    )
+//}
