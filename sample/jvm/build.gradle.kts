@@ -21,8 +21,10 @@ sourceSets {
 }
 
 dependencies {
-    implementation(project(":kojson-jvm-gson"))
+    // validate snapshot publishing to maven-central
+    implementation("io.noties.kojson:kojson-jvm-gson:1.0.0-SNAPSHOT")
+    implementation("io.noties.kojson:kojson-kmp-serialization:1.0.0-SNAPSHOT")
 
-    implementation(project(":kojson-kmp-serialization"))
-//    implementation(libs.kotlinx.serialization)
+//    implementation(project(":kojson-jvm-gson"))
+//    implementation(project(":kojson-kmp-serialization"))
 }

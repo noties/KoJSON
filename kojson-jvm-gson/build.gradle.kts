@@ -5,13 +5,17 @@ import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 plugins {
     id("java-library")
     alias(libs.plugins.jetbrains.kotlin.jvm)
+    alias(libs.plugins.vanniktechMavenPublish)
 }
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
-    withSourcesJar()
-    withJavadocJar()
+
+    // disabled as publishing plugin cannot live with those
+    // https://github.com/vanniktech/gradle-maven-publish-plugin/issues/772
+//    withSourcesJar()
+//    withJavadocJar()
 }
 
 kotlin {
@@ -39,4 +43,9 @@ tasks.withType<Test>().configureEach {
     testLogging {
         events(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED)
     }
+}
+
+mavenPublishing {
+    publishToMavenCentral(true)
+    signAllPublications()
 }

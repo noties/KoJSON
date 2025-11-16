@@ -6,6 +6,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.vanniktechMavenPublish)
 }
 
 kotlin {
@@ -89,4 +90,9 @@ tasks.withType<Test>().configureEach {
     testLogging {
         events(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED)
     }
+}
+
+mavenPublishing {
+    publishToMavenCentral(true)
+    signAllPublications()
 }

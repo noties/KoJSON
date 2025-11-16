@@ -33,6 +33,4 @@ android {
 
 dependencies {
     implementation(project(":kojson-kmp-serialization"))
-    // do we need the library? api should be included, but that should be it
-//    implementation(libs.kotlinx.serialization)
 }
