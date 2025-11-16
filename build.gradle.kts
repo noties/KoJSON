@@ -109,26 +109,39 @@ subprojects {
         }
 
         repositories {
-//            maven {
-//                url = (property("MAVEN_LOCAL_DIR") as String)
-//                    .let { "file://$it" }
-//                    .let { URI.create(it) }
-//            }
+            // publish to local directory, zip and upload, f* gardle
             maven {
-                name = "Sonatype"
-                url = if (version.toString().endsWith("SNAPSHOT")) {
-                    snapshotRepositoryUrl
-                } else {
-                    releaseRepositoryUrl
-                }
-
-                if (sonatypeUsername != null && sonatypePassword != null) {
-                    credentials {
-                        username = sonatypeUsername
-                        password = sonatypePassword
-                    }
-                }
+                url = (property("MAVEN_LOCAL_DIR") as String)
+                    .let { "file://$it" }
+                    .let { URI.create(it) }
             }
+//            maven {
+////                name = "Sonatype"
+//                url = if (version.toString().endsWith("SNAPSHOT")) {
+//                    snapshotRepositoryUrl
+//                } else {
+//                    releaseRepositoryUrl
+//                }
+//
+//                credentials(HttpHeaderCredentials::class) {
+//                    name = "Authorization"
+//                    value = "Bearer SFlJS0luOllKSXVnUVZ2YkRTN0FsdDF3NUlReHBaeDZERXZ3TlpNYQo="
+//                }
+//
+                  // "gradle" expects principal (what?!)
+                  //  I need a digital shotgun to kill this monster
+//                authentication {
+//                    create<HttpHeaderAuthentication>("header")
+//                }
+//
+////                if (sonatypeUsername != null && sonatypePassword != null) {
+////
+//////                    credentials {
+//////                        username = sonatypeUsername
+//////                        password = sonatypePassword
+//////                    }
+////                }
+//            }
         }
     }
 
@@ -143,7 +156,7 @@ subprojects {
     }
 }
 
-tasks.register("publishKojsonToSonatype") {
+tasks.register("publishKojsonToMaven") {
     dependsOn(
         ":kojson-api:publishAllPublicationsToMavenRepository",
         ":kojson-kmp-serialization:publishAllPublicationsToMavenRepository",
