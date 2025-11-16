@@ -16,11 +16,14 @@ KoJSON provides:
 
 ## Installation
 
-```groovy
-repositories {
-    mavenCentral()
-}
+<!--
+yes. snapshot is via metadata. https://github.com/badges/shields/issues/10894
+how to specify it? by using `maven-metadata` and manually creating URL to
+published snapshot `maven-metadata.xml` file. of cause.
+-->
+![Maven metadata URL](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fcentral.sonatype.com%2Frepository%2Fmaven-snapshots%2Fio%2Fnoties%2Fkojson%2Fkojson-api%2Fmaven-metadata.xml)
 
+```groovy
 dependencies {
     // choose one (or both) implementations
     implementation("io.noties.kojson:kojson-jvm-gson:{{version}}")          // JVM / Android
