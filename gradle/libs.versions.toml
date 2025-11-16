@@ -1,10 +1,10 @@
 [versions]
-agp = "8.10.1"
-kotlin = "2.0.0"
+agp = "8.5.2"
+kotlin = "2.1.20"
 compose = "1.5.4"
 compose-material3 = "1.1.2"
 androidx-activityCompose = "1.8.0"
-jetbrainsKotlinJvm = "2.0.0"
+jetbrainsKotlinJvm = "2.1.20"
 gson = "2.13.1"
 # requires latest Kotlin version after 2.0.21
 koltinx-serialization = "1.8.1"

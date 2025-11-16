@@ -109,6 +109,11 @@ subprojects {
         }
 
         repositories {
+//            maven {
+//                url = (property("MAVEN_LOCAL_DIR") as String)
+//                    .let { "file://$it" }
+//                    .let { URI.create(it) }
+//            }
             maven {
                 name = "Sonatype"
                 url = if (version.toString().endsWith("SNAPSHOT")) {
@@ -136,4 +141,12 @@ subprojects {
             sign(publishing.publications)
         }
     }
+}
+
+tasks.register("publishKojsonToSonatype") {
+    dependsOn(
+        ":kojson-api:publishAllPublicationsToMavenRepository",
+        ":kojson-kmp-serialization:publishAllPublicationsToMavenRepository",
+        ":kojson-jvm-gson:publishReleasePublicationToMavenRepository",
+    )
 }
