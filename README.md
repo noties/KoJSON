@@ -17,9 +17,12 @@ KoJSON provides:
 ## Installation
 
 <!--
-yes. snapshot is via metadata. https://github.com/badges/shields/issues/10894
-how to specify it? by using `maven-metadata` and manually creating URL to
-published snapshot `maven-metadata.xml` file. of cause.
+yes. snapshot version can be created via `maven-metadata` shield type 
+by manually creating path to the `maven-metadata.xml` file. Currently 
+it looks like this - `https://central.sonatype.com/repository/maven-snapshots/io/noties/kojson/kojson-api/maven-metadata.xml` 
+and it seems we should hardcode this path, as there is no _unified_ snapshot URL anymore. 
+At least shields.io no longer provides one.
+@see https://github.com/badges/shields/issues/10894
 -->
 ![Maven metadata URL](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fcentral.sonatype.com%2Frepository%2Fmaven-snapshots%2Fio%2Fnoties%2Fkojson%2Fkojson-api%2Fmaven-metadata.xml)
 
